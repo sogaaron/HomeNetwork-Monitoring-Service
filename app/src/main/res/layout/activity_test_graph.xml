@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".TestGraphActivity" >
+
+
+    <FrameLayout
+        android:id="@+id/frame"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@id/bottom">
+
+        <com.github.mikephil.charting.charts.LineChart
+            android:id="@+id/chart"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"></com.github.mikephil.charting.charts.LineChart>
+
+
+        <TextView
+            android:id="@+id/movemove"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="MOVE"
+            android:textAlignment="center" />
+    </FrameLayout>
+
+
+    <LinearLayout
+        android:id="@+id/bottom"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/listbutton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:onClick="showList"
+            android:text="Device" />
+
+        <Button
+            android:id="@+id/buttonEvent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="enterEvent"
+            android:layout_weight="1"
+            android:text="EVENT" />
+
+        <TextView
+            android:id="@+id/textView2"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:text="Last minutes"
+            android:textStyle="bold" />
+
+        <Spinner
+            android:id="@+id/spinner"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_weight="2" />
+
+    </LinearLayout>
+</RelativeLayout>
