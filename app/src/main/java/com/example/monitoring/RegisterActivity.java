@@ -25,7 +25,6 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
-import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
@@ -105,12 +104,14 @@ public class RegisterActivity extends AppCompatActivity {
                     //내용 지우기
 
 
+                    final String finalMacinput = macinput;
                     db.collection("gabriel").document(macinput)
                             .set(deviceInfo)
                             .addOnSuccessListener(new OnSuccessListener<Void>() {
                                 @Override
                                 public void onSuccess(Void v) {
                                     Log.d(TAG, "DocumentSnapshot added with ID: ");
+                                    /*
                                     final Snackbar sn = Snackbar.make(view, "Register Success", Snackbar.LENGTH_INDEFINITE);
                                     sn.setAction("확인", new View.OnClickListener() {
                                         @Override
@@ -119,6 +120,23 @@ public class RegisterActivity extends AppCompatActivity {
                                         }
                                     });
                                     sn.show();
+                                    */
+
+                                    AlertDialog.Builder editAD = new AlertDialog.Builder(RegisterActivity.this);
+                                    editAD.setTitle("")
+                                            .setMessage("등록이 완료되었습니다. 이벤트를 등록하시겠습니까?")
+                                            .setPositiveButton("확인", new DialogInterface.OnClickListener() {
+                                                @Override
+                                                public void onClick(DialogInterface dialog, int which) {
+                                                    Intent intent = new Intent(RegisterActivity.this,TrainingActivity.class);
+                                                    intent.putExtra("mac", finalMacinput);
+                                                    startActivity(intent);
+                                                }
+                                            })
+                                            .setNegativeButton("취소", null);
+                                    AlertDialog alert = editAD.create();
+                                    alert.show();
+
 
                                 }
                             })

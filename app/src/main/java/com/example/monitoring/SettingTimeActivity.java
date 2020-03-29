@@ -16,6 +16,7 @@ import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -40,26 +41,40 @@ public class SettingTimeActivity extends AppCompatActivity {
 
     public void addTime(View view) {
         int sh,sm, eh,em;
+        Calendar calStart = Calendar.getInstance();
+        Calendar calEnd = Calendar.getInstance();
+        //String timetext;
+
         if(Build.VERSION.SDK_INT>= Build.VERSION_CODES.M){
-            sh= startTime.getHour();
-            sm = startTime.getMinute();
-            eh= endTime.getHour();
-            em = endTime.getMinute();
-            Log.d(TAG, "time" + sh + ":" + sm + "    "+eh + ":" +em);
+            calStart.set(Calendar.HOUR_OF_DAY,startTime.getHour());
+            calStart.set(Calendar.MINUTE,startTime.getMinute());
+            calEnd.set(Calendar.HOUR_OF_DAY,endTime.getHour());
+            calEnd.set(Calendar.MINUTE,endTime.getMinute());
+            //timetext = startTime.getHour()+":"+startTime.getMinute() + " ~ " +endTime.getHour()+":"+endTime.getMinute();
+
         }else{
-            sh = startTime.getCurrentHour();
-            sm = startTime.getCurrentMinute();
-            eh= endTime.getCurrentHour();
-            em = endTime.getCurrentMinute();
-            Log.d(TAG, "time" + sh + ":" + sm + "    "+eh + ":" +em);
-
+            calStart.set(Calendar.HOUR_OF_DAY,startTime.getCurrentHour());
+            calStart.set(Calendar.MINUTE,startTime.getCurrentMinute());
+            calEnd.set(Calendar.HOUR_OF_DAY,endTime.getCurrentHour());
+            calEnd.set(Calendar.MINUTE,endTime.getCurrentMinute());
+            //timetext = calStart.get(Calendar.HOUR_OF_DAY)+":"+calStart.get(Calendar.MINUTE) + " ~ " +calEnd.get(Calendar.HOUR_OF_DAY)+":"+calEnd.get(Calendar.MINUTE);
         }
-        String timetext = sh+":"+sm + " ~ " +eh + ":"+em;
-        setTime.put("timetext",timetext);
-        setTime.put("start",new Timestamp(new Date(0,0,1, sh-9, sm,0)));
-        setTime.put("end",new Timestamp(new Date(0,0,1, eh-9, em,0)));
-        setTime.put("flag",false);
 
+        String timetext = String.format("%02d", calStart.get(Calendar.HOUR_OF_DAY))+":"+String.format("%02d", calStart.get(Calendar.MINUTE)) + " ~ " +String.format("%02d", calEnd.get(Calendar.HOUR_OF_DAY))+":"+String.format("%02d", calEnd.get(Calendar.MINUTE));
+
+        if(calStart.get(Calendar.HOUR_OF_DAY)>calEnd.get(Calendar.HOUR_OF_DAY))
+            calEnd.add(Calendar.DATE,1);
+
+        calStart.add(Calendar.HOUR_OF_DAY,-9);
+        calEnd.add(Calendar.HOUR_OF_DAY,-9);//파이어스토어에서 우리가 확인할 때 시간 맞추기 위해
+
+
+
+        setTime.put("timetext",timetext);
+        setTime.put("start",calStart.getTime());
+        setTime.put("end",calEnd.getTime());
+        setTime.put("flag",true);
+        setTime.put("now", new Timestamp(new Date()));
 
         db.collection("notificationTime")
                 .add(setTime)

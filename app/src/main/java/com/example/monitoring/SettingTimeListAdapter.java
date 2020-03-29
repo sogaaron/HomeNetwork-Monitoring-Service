@@ -119,7 +119,7 @@ public class SettingTimeListAdapter extends BaseAdapter {
 
         item.setTime(time);
         item.setFlag(flag);
-        Log.e("qqqqqqqqqq",item.getTime() +"  "+ item.getFlag());
+        Log.e(TAG,item.getTime() +"  "+ item.getFlag());
         listViewItemList.add(item);
     }
 }

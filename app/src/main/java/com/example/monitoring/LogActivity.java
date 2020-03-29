@@ -102,51 +102,6 @@ public class LogActivity extends AppCompatActivity {
 
     }
 
-    private void selectedLogs(final String selectedNickname) {
-            adapter.deleteItem();
-            date4 = null;
-            db.collection("log")
-                    .whereEqualTo("nickname", selectedNickname)
-                    .orderBy("time",Query.Direction.DESCENDING)
-                    .get()
-                    .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-
-                        @Override
-                        public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                            if (task.isSuccessful()) {
-                                for (QueryDocumentSnapshot document : task.getResult()) {
-                                        String text = document.getString("text");
-                                        Timestamp timestamp = document.getTimestamp("time");
-
-                                        //시간변환
-                                        Date date1 = timestamp.toDate();
-                                        Calendar cal = Calendar.getInstance();
-                                        cal.setTime(date1);
-                                        cal.add(Calendar.HOUR,9);
-
-                                        String date2 = dateFormat1.format(cal.getTime());
-                                        String date3 = dateFormat2.format(cal.getTime());
-
-                                        if(date2.equals(date4)){
-                                            adapter.addItem(text,date3);
-                                        }else {
-                                            adapter.addItem(ContextCompat.getDrawable(getApplicationContext(), R.drawable.update), date2);
-                                            adapter.addItem(text,date3);
-                                            date4 = date2;
-                                        }
-                                    Log.d(TAG, document.getId() + " => " + document.getData());
-                                }
-                            } else {
-                                Log.d(TAG, "Error getting documents: ", task.getException());
-                            }
-                            list();
-
-                        }
-                    });
-
-
-
-    }
 
     private void list() {
         ListView listview;
@@ -155,6 +110,7 @@ public class LogActivity extends AppCompatActivity {
     }
 
     private void allLogs() {
+        adapter.deleteItem();
         db.collection("log").orderBy("time",Query.Direction.DESCENDING)
                 .get()
                 .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
@@ -163,7 +119,7 @@ public class LogActivity extends AppCompatActivity {
                     public void onComplete(@NonNull Task<QuerySnapshot> task) {
                         if (task.isSuccessful()) {
                             for (QueryDocumentSnapshot document : task.getResult()) {
-                                //Log.d(TAG, document.getId() + " => " + document.getData());
+                                Log.d(TAG, document.getId() + " => " + document.getData());
 
                                 String text = document.getString("text");
                                 Timestamp timestamp = document.getTimestamp("time");
@@ -171,13 +127,10 @@ public class LogActivity extends AppCompatActivity {
                                 //시간변환
                                 Date date1 = timestamp.toDate();
 
-                                //String test = dateFormat.format(date1);
-
                                 Calendar cal = Calendar.getInstance();
                                 cal.setTime(date1);
                                 cal.add(Calendar.HOUR,9);
 
-                                String test2 = dateFormat.format(cal.getTime());
                                 String date2 = dateFormat1.format(cal.getTime());
                                 String date3 = dateFormat2.format(cal.getTime());
 
@@ -189,7 +142,6 @@ public class LogActivity extends AppCompatActivity {
                                     adapter.addItem(text,date3);
                                    date4 = date2;
                                 }
-                                Log.d(TAG, test2 + "            " + document.getId() + " => " + document.getData());
                             }
                         } else {
                             Log.d(TAG, "Error getting documents: ", task.getException());
@@ -201,21 +153,50 @@ public class LogActivity extends AppCompatActivity {
                 });
     }
 
+
+    private void selectedLogs(final String selectedNickname) {
+        adapter.deleteItem();
+        date4 = null;
+        db.collection("log")
+                .whereEqualTo("nickname", selectedNickname)
+                .orderBy("time",Query.Direction.DESCENDING)
+                .get()
+                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+
+                    @Override
+                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                        if (task.isSuccessful()) {
+                            for (QueryDocumentSnapshot document : task.getResult()) {
+                                String text = document.getString("text");
+                                Timestamp timestamp = document.getTimestamp("time");
+
+                                //시간변환
+                                Date date1 = timestamp.toDate();
+                                Calendar cal = Calendar.getInstance();
+                                cal.setTime(date1);
+                                cal.add(Calendar.HOUR,9);
+
+                                String date2 = dateFormat1.format(cal.getTime());
+                                String date3 = dateFormat2.format(cal.getTime());
+
+                                if(date2.equals(date4)){
+                                    adapter.addItem(text,date3);
+                                }else {
+                                    adapter.addItem(ContextCompat.getDrawable(getApplicationContext(), R.drawable.update), date2);
+                                    adapter.addItem(text,date3);
+                                    date4 = date2;
+                                }
+                                Log.d(TAG, document.getId() + " => " + document.getData());
+                            }
+                        } else {
+                            Log.d(TAG, "Error getting documents: ", task.getException());
+                        }
+                        list();
+
+                    }
+                });
+
+    }
+
+
 }
-
-
-
-
-
-
-    //adapter.addItem("The First Item", "this is the first item. Two TextView are used for title and desc.") ;
-        // 두 번째 아이템 추가.
-        //adapter.addItem(ContextCompat.getDrawable(this, R.drawable.update), "2nd : Account Box Black 36dp") ;
-        // 세 번째 아이템 추가.
-        //adapter.addItem("The Third Item", "this is the third item. Two TextView are used for title and desc.") ;
-        // 네 번째 아이템 추가
-        //adapter.addItem(ContextCompat.getDrawable(this, R.drawable.update), "4th : Account Circle Black 36dp") ;
-        // 다섯 번째 아이템 추가.
-        //adapter.addItem(ContextCompat.getDrawable(this, R.drawable.update), "5th : Assignment Ind Black 36dp") ;
-
-

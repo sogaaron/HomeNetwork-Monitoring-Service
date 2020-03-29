@@ -11,14 +11,11 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
-import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.Locale;
 
 public class SettingTimeListActivity extends AppCompatActivity{
@@ -48,13 +45,17 @@ public class SettingTimeListActivity extends AppCompatActivity{
                     public void onComplete(@NonNull Task<QuerySnapshot> task) {
                         if (task.isSuccessful()) {
                             for (QueryDocumentSnapshot document : task.getResult()) {
-                                //String start = document.getString("start");
+                                /*
+
                                 Timestamp timestampStart = document.getTimestamp("start");
                                 Timestamp timestampEnd = document.getTimestamp("end");
+
+                                 */
                                 boolean flag = document.getBoolean("flag");
                                 String time = document.getString("timetext");
 
                                 //시간변환
+                                /*
                                 Date date1 = timestampStart.toDate();
                                 Date date2 = timestampEnd.toDate();
                                 Calendar cal1 = Calendar.getInstance();
@@ -62,13 +63,14 @@ public class SettingTimeListActivity extends AppCompatActivity{
                                 Calendar cal2 = Calendar.getInstance();
                                 cal1.setTime(date1);
                                 cal2.setTime(date2);
-                                cal1.add(Calendar.HOUR,9);
-                                cal2.add(Calendar.HOUR,9);
+                                cal1.add(Calendar.HOUR_OF_DAY,9);
+                                cal2.add(Calendar.HOUR_OF_DAY,9);
 
                                 String start = dateFormat.format(cal1.getTime());
                                 String end = dateFormat.format(cal2.getTime());
-                                String noti = start+" ~ " +end;
+                                Log.d("SettingTimeAcitivity", "show" + start + "  " + end);
 
+                                 */
                                 adapter.addItem(time,flag);
                                 adapter2.addItem(time,flag);
                                 Log.d(TAG, document.getId() + " => " + document.getData());
