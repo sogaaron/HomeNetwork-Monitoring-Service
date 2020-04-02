@@ -75,7 +75,9 @@ public class TestGraphActivity extends AppCompatActivity implements View.OnTouch
 
         // 텍스트 드래그
         textView = (TextView)findViewById(R.id.movemove);
+//        textView.setBackgroundColor(Color.BLUE);
         textView.setOnTouchListener(this);
+
 
         //
 
@@ -171,11 +173,11 @@ public class TestGraphActivity extends AppCompatActivity implements View.OnTouch
 
 
 
-        LimitLine ll1 = new LimitLine(215f, "Maximum Limit");
-        ll1.setLineWidth(4f);
-        ll1.enableDashedLine(10f, 10f, 0f);
-        ll1.setLabelPosition(LimitLine.LimitLabelPosition.RIGHT_TOP);
-        ll1.setTextSize(10f);
+//        LimitLine ll1 = new LimitLine(215f, "Maximum Limit");
+//        ll1.setLineWidth(4f);
+//        ll1.enableDashedLine(10f, 10f, 0f);
+//        ll1.setLabelPosition(LimitLine.LimitLabelPosition.RIGHT_TOP);
+//        ll1.setTextSize(10f);
 
 //        LimitLine ll2 = new LimitLine(70f, "Minimum Limit");
 //        ll2.setLineWidth(4f);
@@ -248,7 +250,7 @@ public class TestGraphActivity extends AppCompatActivity implements View.OnTouch
                                 set1 = new LineDataSet(values, nick);
                                 set1.setDrawIcons(false);
                                 set1.enableDashedLine(10f, 5f, 0f); // 그래프 쌍곡선
-                                set1.enableDashedHighlightLine(10f, 5f, 0f);    // 터치했을 때 나오는 주황색 라인 관련
+//                                set1.enableDashedHighlightLine(10f, 5f, 0f);    // 터치했을 때 나오는 주황색 라인 관련
                                 set1.setColor(Color.DKGRAY);   // 쌍곡선 색깔
                                 set1.setCircleColor(Color.DKGRAY);
                                 set1.setLineWidth(1f);
@@ -260,7 +262,8 @@ public class TestGraphActivity extends AppCompatActivity implements View.OnTouch
 //                                set1.setFormLineDashEffect(new DashPathEffect(new float[]{10f, 5f}, 0f));
 //                                set1.setFormSize(15.f);
 //                                set1.setLabel(nick);
-                                set1.setHighLightColor(Color.BLUE);
+//                                set1.setHighLightColor(Color.BLUE);
+                                set1.setHighlightEnabled(false);
 
                                 if (Utils.getSDKInt() >= 18) {
                                     Drawable drawable = ContextCompat.getDrawable(TestGraphActivity.this, R.drawable.fade_blue);
@@ -290,9 +293,29 @@ public class TestGraphActivity extends AppCompatActivity implements View.OnTouch
                             else
                                 max = event;
 
-                            leftAxis.setAxisMaximum((int)(max*1.2));
+                            int aa = ((ViewGroup)textView.getParent()).getHeight(); // 처음 그래프 나올 때 뷰와 라인 위치 맞춰줌
+                            int kk = textView.getHeight();
+
+                            if(max < 10)
+                                max = 10;
+                            int h = (int)(aa - 2.5*kk + event*(8*kk - 3*aa)/(3.6*max));
+                            if(max == 0){   // 모두 0 일 때 view 를 바닥으로 내림
+//                                max = 1;
+                                h = (int)(aa - 2.5*kk);
+                            }
+                            textView.setY(h);
+                            Log.e("hhhh",h+"");
+                            if((int)mChart.getYMax() < 10 && max < 10){
+                                max = 10;
+
+                            }
+
+
+                            leftAxis.setAxisMaximum((int)(max*1.2));    //                            leftAxis.removeAllLimitLines();
                             leftAxis.removeAllLimitLines();
                             leftAxis.addLimitLine(eventline);
+
+
                         } else {
                             Log.w(TAG, "Error getting documents.", task.getException());
                         }
@@ -332,35 +355,73 @@ public class TestGraphActivity extends AppCompatActivity implements View.OnTouch
 
 
     @Override
-    public boolean onTouch(final View v, final MotionEvent eve) {
+    public boolean onTouch(View v, MotionEvent eve){
+        int parentWidth = ((ViewGroup)v.getParent()).getWidth();    // 부모 View 의 Width
+        int parentHeight = ((ViewGroup)v.getParent()).getHeight();    // 부모 View 의 Height
+        int k = v.getHeight();
+        int top = (int)(1.2* max);  // 그래프의 꼭대기
+        int high = (int)((3*parentHeight - 5*k)/18.0);  // event line  y좌표 ( 그래프의 5/6 지점 )
+        int hh = (int)(parentHeight - 2.5*k + event*(8*k - 3*parentHeight)/(3.6*max));  // event line y좌표
 
 
-//        new Thread(new Runnable() {     // renderData 함수 멀티 쓰레드로 실행
-//            @Override public void run() { // TODO Auto-generated method stub
-        int width = ((ViewGroup) v.getParent()).getWidth() - v.getWidth();
-        int height = ((ViewGroup) v.getParent()).getHeight() - v.getHeight();   // view frame 부분을 제외한 화면 세로 크기
-        Log.e("widtheight:",width+" , "+height);
-//                height -= 50;
-//                Float f = new Float(height);
-        Log.e("max:",max+"");
-        Log.e("event:",event+"");
+        if(eve.getAction() == MotionEvent.ACTION_DOWN){
+            // 뷰 누름
+            oldXvalue = eve.getX();
+            oldYvalue = eve.getY();
+            Log.d("viewTest", "parX : "+ parentWidth + " parY : " + parentHeight);
+            Log.d("viewTest", "oldXvalue : "+ oldXvalue + " oldYvalue : " + oldYvalue);    // View 내부에서 터치한 지점의 상대 좌표값.
+            Log.d("viewTest", "v.getY() : "+v.getY());    // View 의 좌측 상단이 되는 지점의 절대 좌표값.
+            Log.d("viewTest", "RawX : " + eve.getRawX() +" RawY : " + eve.getRawY());    // View 를 터치한 지점의 절대 좌표값.
+            Log.d("viewTest", "v.getHeight : " + v.getHeight() + " v.getWidth : " + v.getWidth());    // View 의 Width, Height
+//            v.setY(hh);
+        }else if(eve.getAction() == MotionEvent.ACTION_MOVE){
+            // 뷰 이동 중
+            Log.e("kk",v.getY()+"");
+            Log.d("yyyyyyy:",v.getY() + (eve.getY()) - (v.getHeight()/2)+"");
+            v.setX(v.getX() + (eve.getX()) - (v.getWidth()/2));
+            v.setY(v.getY() + (eve.getY()) - (v.getHeight()/2));
+            Log.d("yyyyyyy22:",v.getY()+"");
 
 
-        if (eve.getAction() == MotionEvent.ACTION_DOWN) {
-            oldXvalue = (int)eve.getX();
-            oldYvalue = (int)eve.getY();
-            Log.i("Tag1?", "Action Down X" + (int)eve.getX() + "," + (int)eve.getY());
-            Log.i("Tag1", "Action Down rX " + (int)eve.getRawX() + "," + (int)eve.getRawY());
-        } else if (eve.getAction() == MotionEvent.ACTION_MOVE) {
-            v.setX((int)eve.getRawX() - oldXvalue);
-            v.setY((int)eve.getRawY() - (oldYvalue + v.getHeight()));
-            Log.i("Tag2", "Action Move " + (int)v.getX() + "," + (int)v.getY()+"," + v.getHeight());
-            Log.i("Tag2", "Action Move22: " + (int)eve.getRawX() + "," + (int)eve.getRawY());
-//                    event = 700 - (int)v.getY();
-//                    v.setY(event);
-            event = (int)(((height - v.getY())/height)*(int)(max*1.2));
+            Log.d("max11:",max+"");
+            double ratio = (parentHeight - 2*k - (v.getY() + 0.5*k))/(parentHeight - (int)((8.0)/3)*k);  // 그래프 y축에 대한 event 의 비율
 
-            LimitLine eventline = new LimitLine(event, "Limit");
+            if((int)mChart.getYMax() < 10 && max < 10){     // 그래프 y값 10 미만일때 ( 모두 0일때를 위한 것 )
+                max = 10;
+                top = 12;
+            }
+
+            event = (int)( top * ratio);    //
+            Log.d("ratio:",ratio+"");
+            Log.d("ev:",top*ratio+"");
+
+            if(event < 0)       // event 라인 0 밑으로 못내려가도록
+                event = 0;
+
+            Log.e("event",event+"");
+
+//            if(max >= 15){
+
+            if(v.getY() < high){
+//                    if(event >100 )
+                event = (int)(1.01*event);      // event 값 조금씩 변화시켜줘야 라인 움직임
+//                    else
+//                        event++;
+                v.setY((int)(0.9*high));
+            }else{
+                if((int)mChart.getYMax() != max && (int)mChart.getYMax() > 10){
+                    event = (int)(0.99*event);
+                    v.setY((int)(1.1*high));
+                }else{
+                    hh = (int)(parentHeight - 2.5*k + event*(8*k - 3*parentHeight)/(3.6*max));
+                    v.setY(hh);
+                }
+            }
+//            }
+
+            Log.d("yyyyyyy33:",v.getY() +"");
+
+            LimitLine eventline = new LimitLine(event, "EVENT");
             eventline.setLineWidth(4f);
             eventline.enableDashedLine(10f, 10f, 0f);
             eventline.setLabelPosition(LimitLine.LimitLabelPosition.RIGHT_TOP);
@@ -372,75 +433,60 @@ public class TestGraphActivity extends AppCompatActivity implements View.OnTouch
             else
                 max = event;
 
-            leftAxis.setAxisMaximum((int)(max*1.2));
+            Log.d("max22:",max+"");
+
+//            if(max < 10)
+//                leftAxis.setAxisMaximum((float) (max*1.2));    //
+//            else
+            if((int)mChart.getYMax() < 10 && max < 10)
+                leftAxis.setAxisMaximum(12);    //
+            else
+                leftAxis.setAxisMaximum((int)(max*1.2));    //
+
             leftAxis.removeAllLimitLines();
             leftAxis.addLimitLine(eventline);
             Log.e("limit move", event+"");
+
             mChart.getData().notifyDataChanged();
             mChart.notifyDataSetChanged();
             mChart.invalidate();
 
-        } else if (eve.getAction() == MotionEvent.ACTION_UP) {
-            Log.i("Tag3", "Action up " + (int)v.getX() + "," + (int)v.getY());
 
-            if (v.getX() > width && v.getY() > height) {        // move frame 이 화면 넘어가지 않도록
-                v.setX(width);
-                v.setY(height);
-            } else if (v.getX() < 0 && v.getY() > height) {
+        }else if(eve.getAction() == MotionEvent.ACTION_UP){
+            // 뷰에서 손을 뗌
+            Log.e("aaaaaaaa","uuuuuuuuuuuuuuuuuuuup");
+            if(v.getX() < 0){
                 v.setX(0);
-                v.setY(height);
-            } else if (v.getX() > width && v.getY() < 0) {
-                v.setX(width);
-                v.setY(0);
-            } else if (v.getX() < 0 && v.getY() < 0) {
-                v.setX(0);
-                v.setY(0);
-            } else if (v.getX() < 0 || v.getX() > width) {
-                if (v.getX() < 0) {
-                    v.setX(0);
-                    v.setY((int)eve.getRawY() - oldYvalue - v.getHeight());
-                } else {
-                    v.setX(width);
-                    v.setY((int)eve.getRawY() - oldYvalue - v.getHeight());
-                }
-            } else if (v.getY() < 0 || v.getY() > height) {
-                if (v.getY() < 0) {
-                    v.setX((int)eve.getRawX() - oldXvalue);
-                    v.setY(0);
-                } else {
-                    v.setX((int)eve.getRawX() - oldXvalue);
-                    v.setY(height);
-                }
+            }else if((v.getX() + v.getWidth()) > parentWidth){
+                v.setX(parentWidth - v.getWidth());
             }
 
+            if(v.getY() <= (int)(1.1*high)){
+                v.setY(high);
+            }else if((v.getY() + v.getHeight()) > parentHeight - 2*k){
+                v.setY(parentHeight - 2*k - v.getHeight());
+                Log.e("hey","hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh");
+            }
 
-            Log.i("Tag3", "Action up 22: " + (int)v.getX() + "," + (int)v.getY());
-//
-////                    event = 700 - (int)v.getY();
-            LimitLine eventline = new LimitLine(event, "Limit");
-            eventline.setLineWidth(4f);
-            eventline.enableDashedLine(10f, 10f, 0f);
-            eventline.setLabelPosition(LimitLine.LimitLabelPosition.RIGHT_TOP);
-            eventline.setTextSize(10f);
-            YAxis leftAxis = mChart.getAxisLeft();
-//                    int max;
-            if((int)mChart.getYMax() > event)
-                max = (int)mChart.getYMax();
-            else
-                max = event;
+            db.collection("gabriel")
+                    .whereEqualTo("mac", mac)
+                    .get()
+                    .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                        @Override
+                        public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                            if (task.isSuccessful()) {
+                                for (QueryDocumentSnapshot document : task.getResult()) {
+                                    db.collection("gabriel").document(document.getId()).update("normal", event);
+                                    Log.d(TAG, document.getId() + " => " + document.getData());
+                                }
 
-            leftAxis.setAxisMaximum((int)(max*1.2));
-            leftAxis.removeAllLimitLines();
-            leftAxis.addLimitLine(eventline);
-            Log.e("limit up", event+"");
-            mChart.getData().notifyDataChanged();
-            mChart.notifyDataSetChanged();
-            mChart.invalidate();
+                            } else {
+                                Log.d(TAG, "Error getting documents: ", task.getException());
+                            }
+                        }
+                    });
 
         }
-//            }
-//        }).start();
-
         return true;
     }
 
@@ -573,10 +619,6 @@ public class TestGraphActivity extends AppCompatActivity implements View.OnTouch
                             Toast.makeText(getApplicationContext(), "숫자를 입력하세요", Toast.LENGTH_LONG).show();
                             //}
                         }
-
-
-
-
 
                     }
                 });
