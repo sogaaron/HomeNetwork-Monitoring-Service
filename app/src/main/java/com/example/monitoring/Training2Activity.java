@@ -6,6 +6,8 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -26,13 +28,14 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.Locale;
 
-import static android.graphics.Color.BLACK;
-import static android.graphics.Color.BLUE;
+import static android.graphics.Color.LTGRAY;
 import static android.graphics.Color.RED;
 
 
-public class TrainingActivity extends AppCompatActivity {
+public class Training2Activity extends AppCompatActivity {
     TextView textView;
+    Button button;
+
     final Handler handler = new Handler();
     int i=0;
     FirebaseFirestore db = FirebaseFirestore.getInstance();
@@ -48,6 +51,9 @@ public class TrainingActivity extends AppCompatActivity {
 
     int onSum, offSum = 0;
     double event = 0;
+    int times = 0;
+    String mac;
+
 
 
 
@@ -63,76 +69,27 @@ public class TrainingActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_training);
+        setContentView(R.layout.activity_training2);
         textView = findViewById(R.id.textViewTraining);
+        button = findViewById(R.id.buttonT);
 
         Intent intent = getIntent();
 
-        final String mac = intent.getExtras().getString("mac");
-
-        new Handler().postDelayed(new Runnable() {
-
-            @Override
-
-            public void run() {
-                if (i!=3) {
-                    textView.setText("기기를 작동하십시오");
-                    textView.setTextColor(RED);
-                    //Log.d(TAG, "기기작동"+ i);
-
-
-                    Calendar now = Calendar.getInstance();
-                    now.add(Calendar.HOUR_OF_DAY,9);
-                    onTime.add(now);
-                    //Log.d(TAG,"now" + now);
-
-                    new Handler().postDelayed(new Runnable() {
-
-                        @Override
-
-                        public void run() {
-                            i++;
-
-                            if (i==3) {
-                                textView.setText("잠시만 기다려주세요.");
-                                textView.setTextColor(BLUE);
-                                //          Log.d(TAG, "측정 끝"+ i);
-                                check(mac);
-
-                            } else{
-                                textView.setText("기기를 가만히 두십시오");
-                                textView.setTextColor(BLACK);
-
-                                //        Log.d(TAG, "기기멈춤"+ i);
-                            }
-
-                            Calendar now = Calendar.getInstance();
-                            now.add(Calendar.HOUR_OF_DAY,9);
-                            offTime.add(now);
-                            //       Log.d(TAG,"now" + now);
-                        }
-                    }, 8000); // ms 단위라서 1000이 1초입니다.
-                    handler.postDelayed(this,18000);
-                }
-            }
-        }, 3000); // ms 단위라서 1000이 1초입니다.
+        mac = intent.getExtras().getString("mac");
 
 
 
 
-
-
-
-
+//        check(mac);
     }
 
     private void check(final String mac) {
         Log.d(TAG, "MAC : "+mac);
 
-        db.collection("traffics")
+        db.collection("test")
                 //        .whereEqualTo("nickname", selectedNickname)
                 .orderBy("time", Query.Direction.DESCENDING)
-                .limit(9)
+                .limit(6)
                 .get()
                 .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
                     @Override
@@ -140,7 +97,7 @@ public class TrainingActivity extends AppCompatActivity {
                         if (task.isSuccessful()) {
                             for (QueryDocumentSnapshot document : task.getResult()) {
                                 try {
-                                    int traffic = document.getLong(mac).intValue();
+                                    int traffic = document.getLong("gabi").intValue();
                                     String time = document.getString("time");
 
                                     Calendar cal = Calendar.getInstance();
@@ -154,7 +111,7 @@ public class TrainingActivity extends AppCompatActivity {
                                     }
 
                                     allTraffic.add(traffic);
-                                    /*
+                                    //time
                                     Log.d(TAG, "0. " + onTime.get(0).getTime() + "  ~ "+ cal.getTime() + "  ~ " + offTime.get(0).getTime());
                                     Log.d(TAG, String.valueOf(cal.after(onTime.get(0)) && cal.before(offTime.get(0))));
 
@@ -164,15 +121,14 @@ public class TrainingActivity extends AppCompatActivity {
                                     Log.d(TAG, "2. " + onTime.get(2).getTime() + "  ~ "+ cal.getTime() + "  ~ " +offTime.get(2).getTime());
                                     Log.d(TAG, String.valueOf(cal.after(onTime.get(2)) && cal.before(offTime.get(2))));
 
-
-
                                     if((cal.after(onTime.get(0)) && cal.before(offTime.get(0)))|| (cal.after(onTime.get(1)) && cal.before(offTime.get(1))) || (cal.after(onTime.get(2)) && cal.before(offTime.get(2)))){
                                         //작동할 때의 traffic
                                         onTraffic.add(traffic);
                                     }else offTraffic.add(traffic);
                                     //Log.d(TAG,"traffic DATE" +time + "       " + date);
 
-                                    Log.d(TAG, document.getId() + " => " + document.getData());*/
+                                    Log.d(TAG, document.getId() + " => " + document.getData());
+                                    //time
                                 }catch (NullPointerException e){
                                     Log.e("err",e.getMessage());
                                 }
@@ -180,7 +136,14 @@ public class TrainingActivity extends AppCompatActivity {
                         } else {
                             Log.w(TAG, "Error getting documents.", task.getException());
                         }
-/*
+
+                        Collections.sort(onTraffic);
+                        Collections.sort(offTraffic);
+                        Collections.reverse(offTraffic);
+
+                        onTraffic.remove(0);
+                        offTraffic.remove(0);
+
                         int i = 0;
                         for(Integer value : onTraffic){
                             Log.d(TAG,  "ontime : " +i+". " + value.intValue());
@@ -194,15 +157,8 @@ public class TrainingActivity extends AppCompatActivity {
                             j++;
                         }
 
-/
 
-                        Collections.sort(onTraffic);
-                        Collections.sort(offTraffic);
-                        Collections.reverse(offTraffic);
-
-                        onTraffic.remove(0);
-                        offTraffic.remove(0);
-*/
+/*                        // all traffic
                         Collections.sort(allTraffic);
                         Collections.reverse(allTraffic);
 
@@ -218,16 +174,16 @@ public class TrainingActivity extends AppCompatActivity {
                         }
                         event = (double)max/3 + allTraffic.get(maxIndex+1);
                         Log.d(TAG,"max " +  allTraffic.get(maxIndex) + "  d "+ max + "  event  " + event);
-
-
-/*
+                        // all traffic
+*/
+                        //average
                         double onAverage = onSum / onTraffic.size();
                         double offAverage = offSum / offTraffic.size();
 
                         event = (onAverage + offAverage) / 2;
                         Log.d(TAG,"event : " + event);
+                        //average
 
- */
                         db.collection("gabriel")
                                 .whereEqualTo("mac", mac)
                                 .get()
@@ -243,13 +199,13 @@ public class TrainingActivity extends AppCompatActivity {
                                         } else {
                                             Log.d(TAG, "Error getting documents: ", task.getException());
                                         }
-                                        AlertDialog.Builder editAD = new AlertDialog.Builder(TrainingActivity.this);
+                                        AlertDialog.Builder editAD = new AlertDialog.Builder(Training2Activity.this);
                                         editAD.setTitle("")
                                                 .setMessage("이벤트 등록이 완료되었습니다.\n" + mac + " event : " + event)
                                                 .setPositiveButton("확인", new DialogInterface.OnClickListener() {
                                                     @Override
                                                     public void onClick(DialogInterface dialog, int which) {
-                                                        Intent intent = new Intent(TrainingActivity.this,MenuActivity.class);
+                                                        Intent intent = new Intent(Training2Activity.this,MenuActivity.class);
                                                         startActivity(intent);
                                                     }
                                                 });
@@ -264,6 +220,38 @@ public class TrainingActivity extends AppCompatActivity {
 
     }
 
+
+    public void training(View view) {
+        String text = String.valueOf(button.getText());
+        Calendar now = Calendar.getInstance();
+        now.add(Calendar.HOUR_OF_DAY,9);
+        if(text.equals("시작")) {
+            onTime.add(now);
+            textView.setText("기기를 작동해주세요");
+            button.setText("중단");
+
+            times++;
+        }else {
+            offTime.add(now);
+            textView.setText("기기를 멈추고\n버튼이 회색이 되면\n다시 시작 버튼을 눌러주세요");
+            button.setText("시작");
+            button.setBackgroundColor(RED);
+            new Handler().postDelayed(new Runnable()
+            {
+                @Override
+                public void run()
+                {
+                    button.setBackgroundColor(LTGRAY);
+                }
+            }, 5000);
+
+            if(times == 3){
+                textView.setText("잠시만 기다려주세요");
+                button.setVisibility(view.GONE);
+                check(mac);
+            }
+        }
+    }
 }
 
 

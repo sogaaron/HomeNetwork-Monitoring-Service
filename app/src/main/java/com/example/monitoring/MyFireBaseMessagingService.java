@@ -80,7 +80,13 @@ public class MyFireBaseMessagingService extends FirebaseMessagingService {
     // [START receive_message]
     @Override
     public void onMessageReceived(RemoteMessage remoteMessage2) {
+        Log.i(TAG, "알림 메시지" + remoteMessage2);
+
         remoteMessage = remoteMessage2;
+        if(remoteMessage.getData().get("title")=="NEW!"){
+            sendNotification(remoteMessage.getData().get("body"));
+            return;
+        }
         //String now = dateFormat.format (System.currentTimeMillis());
 
         db.collection("notificationTime")//.orderBy("time", Query.Direction.DESCENDING)

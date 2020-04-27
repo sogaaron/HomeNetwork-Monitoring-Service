@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
@@ -23,19 +24,18 @@ import com.google.firebase.firestore.QuerySnapshot;
 
 import java.util.ArrayList;
 
-public class ManagementActivity extends AppCompatActivity implements View.OnClickListener {
+
+public class ManagementActivity extends AppCompatActivity implements View.OnClickListener, AdapterView.OnItemSelectedListener {
     private  final String TAG = getClass().getSimpleName().trim();
     private ListView m_oListView = null;
     ArrayList<String> deviceList = new ArrayList();
+    ArrayList<Integer> typeList = new ArrayList();
     FirebaseFirestore db = FirebaseFirestore.getInstance();
     private DeviceListAdapter oAdapter;
     ArrayList<DeviceListViewItem> oData = new ArrayList<>();
     String nick;
     String position;
-
-
-
-
+    int type;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,7 +50,9 @@ public class ManagementActivity extends AppCompatActivity implements View.OnClic
                         if (task.isSuccessful()) {
                             for (QueryDocumentSnapshot document : task.getResult()) {
                                 String nickname = document.getString("nickname");
+                                int type = document.getLong("type").intValue();
                                 deviceList.add(nickname);
+                                typeList.add(Integer.valueOf(type));
                                 Log.d(TAG, document.getId() + " => " + document.getData());
                             }
                             list();
@@ -59,20 +61,15 @@ public class ManagementActivity extends AppCompatActivity implements View.OnClic
                         }
                     }
                 });
-
-
-
-
-
-
-
     }
 
     public void list(){
         for(int i = 0; i<deviceList.size(); i++){
             DeviceListViewItem oItem = new DeviceListViewItem();
             oItem.nickname = deviceList.get(i);
+            oItem.type = typeList.get(i);
             oItem.onClickListener = this;
+            oItem.isFirstSelected = true;
             oData.add(oItem);
         }
 
@@ -110,7 +107,6 @@ public class ManagementActivity extends AppCompatActivity implements View.OnClic
         {
             case 1: // 수정
                 strViewName = "수정";
-                //oParentView = (View)oParentView .getParent();
 
                 final EditText editText = new EditText(ManagementActivity.this);
                 editText.setOnKeyListener(new View.OnKeyListener() {
@@ -185,7 +181,6 @@ public class ManagementActivity extends AppCompatActivity implements View.OnClic
                 break;
             case 2: // 삭제
                 strViewName = "삭제";
-                //oParentView = (View)oParentView .getParent();
 
                 android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this);
                 builder.setTitle("안내").setIcon(android.R.drawable.ic_dialog_alert).setMessage("삭제하시겠습니까?")
@@ -234,86 +229,55 @@ public class ManagementActivity extends AppCompatActivity implements View.OnClic
                 Toast myToast2 = Toast.makeText(this.getApplicationContext(), strMsg2, Toast.LENGTH_SHORT);
                 myToast2.show();
 
-
                 break;
         }
-
-
         //String strMsg = "선택한 아이템의 position 은 "+position+" 입니다.\nTitle 텍스트 :" + oTextNickname.getText();
         //Toast myToast = Toast.makeText(this.getApplicationContext(), strMsg, Toast.LENGTH_SHORT);
         //myToast.show();
+    }
+
+    @Override
+    public void onItemSelected(AdapterView<?> parent, View v, int position, long id) {
+        View oParentView = (View) parent.getParent(); // 부모의 View를 가져온다. 즉, 아이템 View임.
+        boolean isFirst = (boolean) parent.getTag();  //수정이냐 삭제냐
+
+        if (isFirst){
+            Log.d(TAG, "first selected");
+                parent.setTag(false);
+        }else {
+
+            TextView oTextNickname = (TextView) oParentView.findViewById(R.id.textView);
+            nick = (String) oTextNickname.getText();
+
+            String str = parent.getItemAtPosition(position).toString();
+
+            if (str == "트래픽")
+                type = 0;
+            else if (str == "패킷")
+                type = 1;
+            Log.d(TAG, nick + " selected: " + str + "--> type: " + type);
+
+            db.collection("gabriel")
+                    .whereEqualTo("nickname", nick)
+                    .get()
+                    .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                        @Override
+                        public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                            if (task.isSuccessful()) {
+                                for (QueryDocumentSnapshot document : task.getResult()) {
+                                    Log.d(TAG, document.getId() + " => " + document.getData());
+                                    db.collection("gabriel").document(document.getId()).update("type", type);
+                                }
+                            } else {
+                                Log.d(TAG, "Error getting documents: ", task.getException());
+                            }
+                        }
+                    });
+        }
+    }
+
+    @Override
+    public void onNothingSelected(AdapterView<?> parent) {
 
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*
-
-    public void deleteDevice(View view) {
-        db.collection("gabriel")
-                .whereEqualTo("nickname", true)
-                .get()
-                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                    @Override
-                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                        if (task.isSuccessful()) {
-                            for (QueryDocumentSnapshot document : task.getResult()) {
-                                db.collection("gabriel").document(document.getId()).delete();
-                                Log.d(TAG, document.getId() + " => " + document.getData());
-                            }
-                        } else {
-                            Log.d(TAG, "Error getting documents: ", task.getException());
-                        }
-                    }
-                });
-
-
-
-
-        FirebaseFirestore rootRef = FirebaseFirestore.getInstance();
-        CollectionReference itemsRef = rootRef.collection("yourCollection");
-        Query query = itemsRef.whereEqualTo("field1", "x").whereEqualTo("field2", "y");
-        query.get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-            @Override
-            public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                if (task.isSuccessful()) {
-                    for (DocumentSnapshot document : task.getResult()) {
-                        itemsRef.document(document.getId()).delete();
-                    }
-                } else {
-                Log.d(TAG, "Error getting documents: ", task.getException());
-            }
-        }
-        });
-
-
-
-    }
-
-public void updateNickname(View view) {
-
-        }
- */

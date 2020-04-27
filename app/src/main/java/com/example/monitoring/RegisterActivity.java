@@ -5,6 +5,8 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.InputFilter;
+import android.text.Spanned;
 import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
@@ -39,8 +41,20 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 public class RegisterActivity extends AppCompatActivity {
+
+    public InputFilter filterAlphaNum = new InputFilter() {
+        @Override
+        public CharSequence filter(CharSequence source, int start, int end, Spanned dest, int dstart, int dend) {
+            Pattern ps = Pattern.compile("^[a-zA-Z0-9]+$");
+            if(!ps.matcher(source).matches()){
+                return "";
+            }
+            return null;
+        }
+    };
 
     private class ExampleThread extends Thread {
         private static final String TAG = "ExampleThread";
@@ -58,7 +72,7 @@ public class RegisterActivity extends AppCompatActivity {
     FirebaseFirestore db = FirebaseFirestore.getInstance();
     Map<String, Object> deviceInfo = new HashMap<>();
     ArrayList<String> arr = new ArrayList<>();
-    private  final String TAG = getClass().getSimpleName().trim();
+    private  final String TAG = "RegisterActivity";//getClass().getSimpleName().trim();
     static long prev = 0, now,gap;
     ArrayList<String> unregisetered_List = new ArrayList();
     ArrayList<String> unregisetered_VendorList = new ArrayList();
@@ -72,6 +86,7 @@ public class RegisterActivity extends AppCompatActivity {
         setContentView(R.layout.activity_register);
         view = findViewById(R.id.reg_layout);
         et = findViewById(R.id.macText);
+        et.setFilters(new InputFilter[]{filterAlphaNum});
         et2 = findViewById(R.id.nicknameText);
         b1 = findViewById(R.id.ok_button);
         b2 = findViewById(R.id.cancel_button);
@@ -94,6 +109,7 @@ public class RegisterActivity extends AppCompatActivity {
                     deviceInfo.put("mac", macinput);
                     deviceInfo.put("nickname", nickinput);
                     deviceInfo.put("normal", 0);
+                    deviceInfo.put("type",0);
 
                     InputMethodManager mInputMethodManager = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
                     mInputMethodManager.hideSoftInputFromWindow(et2.getWindowToken(), 0);
@@ -113,7 +129,7 @@ public class RegisterActivity extends AppCompatActivity {
                                     Log.d(TAG, "DocumentSnapshot added with ID: ");
                                     /*
                                     final Snackbar sn = Snackbar.make(view, "Register Success", Snackbar.LENGTH_INDEFINITE);
-                                    sn.setAction("확인", new View.OnClickListener() {
+                                    sn.setAction("확인", new -;View.OnClickListener() {
                                         @Override
                                         public void onClick(View v) {
                                             sn.dismiss();
@@ -128,7 +144,7 @@ public class RegisterActivity extends AppCompatActivity {
                                             .setPositiveButton("확인", new DialogInterface.OnClickListener() {
                                                 @Override
                                                 public void onClick(DialogInterface dialog, int which) {
-                                                    Intent intent = new Intent(RegisterActivity.this,TrainingActivity.class);
+                                                    Intent intent = new Intent(RegisterActivity.this,Training2Activity.class);
                                                     intent.putExtra("mac", finalMacinput);
                                                     startActivity(intent);
                                                 }
@@ -136,6 +152,7 @@ public class RegisterActivity extends AppCompatActivity {
                                             .setNegativeButton("취소", null);
                                     AlertDialog alert = editAD.create();
                                     alert.show();
+                                    Log.d("gggggggggg","ff");
 
 
                                 }
@@ -190,6 +207,13 @@ public class RegisterActivity extends AppCompatActivity {
         Log.w(TAG,"wowowowowowowowowowowo");
         now = System.currentTimeMillis();
         gap = now - prev;
+
+        if(gap > 10000)
+            try {
+                Thread.sleep(7000);   //  파이어스토어에 저장되는데 걸리는 시간 고려
+            }catch (Exception e){
+
+            }
 
         ////////// 미등록 리스트 받기
         db.collection("list").orderBy("time", Query.Direction.DESCENDING).limit(1)      // 가장 최신 리스트 하나
@@ -312,4 +336,6 @@ public class RegisterActivity extends AppCompatActivity {
         setResult(RESULT_OK,intent);
         finish();
     }
+
+
 }

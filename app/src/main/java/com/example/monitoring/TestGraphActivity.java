@@ -41,6 +41,7 @@ import com.google.firebase.firestore.QuerySnapshot;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -58,10 +59,13 @@ public class TestGraphActivity extends AppCompatActivity implements View.OnTouch
     ArrayList<String> deviceList = new ArrayList();
     ArrayList<String> nickList = new ArrayList();
     ArrayList<Integer> eventList = new ArrayList<>();
+    ArrayList<Integer> typeList = new ArrayList<>();
+
     String[] items;
     String mac,nick;
-    int event;
-    int index;
+    String middle_time;
+    int event, flag = 0;
+    int index, type;
     int gap = 60;
     int max;
     FirebaseFirestore db = FirebaseFirestore.getInstance();
@@ -94,9 +98,12 @@ public class TestGraphActivity extends AppCompatActivity implements View.OnTouch
                                 //int event = Integer.parseInt(getevent);
                                 int event = document.getLong("normal").intValue();
                                 String nick = document.getString("nickname");
+                                int type = document.getLong("type").intValue();
                                 deviceList.add(mac);
                                 eventList.add(event);
                                 nickList.add(nick);
+                                typeList.add(type);
+
                                 Log.d(TAG, document.getId() + " => " + document.getData());
                             }
                         } else {
@@ -106,6 +113,7 @@ public class TestGraphActivity extends AppCompatActivity implements View.OnTouch
                         mac = deviceList.get(0);
                         event = eventList.get(0);
                         nick = nickList.get(0);
+                        type = typeList.get(0);
                         Log.e("nick: ",nick);
 
                         new Thread(new Runnable() {     // renderData 함수 멀티 쓰레드로 실행
@@ -131,7 +139,7 @@ public class TestGraphActivity extends AppCompatActivity implements View.OnTouch
     }
 
     public void lastMins(){
-        mins.add(5); mins.add(10); mins.add(30); mins.add(60);
+        mins.add(5); mins.add(10); mins.add(30); mins.add(60); mins.add("24hrs");
         Spinner sp = (Spinner)findViewById(R.id.spinner);
         ArrayAdapter adt = new ArrayAdapter(getApplicationContext(),android.R.layout.simple_spinner_dropdown_item,mins);
         sp.setAdapter(adt);
@@ -146,6 +154,8 @@ public class TestGraphActivity extends AppCompatActivity implements View.OnTouch
                     case 2: gap = 360;
                         break;
                     case 3: gap = 720;
+                        break;
+                    case 4: gap = 17280;
                 }
             }
             @Override
@@ -173,11 +183,11 @@ public class TestGraphActivity extends AppCompatActivity implements View.OnTouch
 
 
 
-//        LimitLine ll1 = new LimitLine(215f, "Maximum Limit");
-//        ll1.setLineWidth(4f);
-//        ll1.enableDashedLine(10f, 10f, 0f);
-//        ll1.setLabelPosition(LimitLine.LimitLabelPosition.RIGHT_TOP);
-//        ll1.setTextSize(10f);
+        LimitLine ll1 = new LimitLine(215f, "Maximum Limit");
+        ll1.setLineWidth(4f);
+        ll1.enableDashedLine(10f, 10f, 0f);
+        ll1.setLabelPosition(LimitLine.LimitLabelPosition.RIGHT_TOP);
+        ll1.setTextSize(10f);
 
 //        LimitLine ll2 = new LimitLine(70f, "Minimum Limit");
 //        ll2.setLineWidth(4f);
@@ -190,8 +200,7 @@ public class TestGraphActivity extends AppCompatActivity implements View.OnTouch
 //        leftAxis.addLimitLine(ll1);
 //        leftAxis.addLimitLine(ll2);
 //        leftAxis.setAxisMaximum(350f);
-        leftAxis.setAxisMinimum(0f);
-        leftAxis.enableGridDashedLine(10f, 10f, 0f);    // 그래프 안 x축 여러개
+        leftAxis.setAxisMinimum(0f);        leftAxis.enableGridDashedLine(10f, 10f, 0f);    // 그래프 안 x축 여러개
         leftAxis.setDrawZeroLine(false);
         leftAxis.setDrawLimitLinesBehindData(false);
 
@@ -209,118 +218,332 @@ public class TestGraphActivity extends AppCompatActivity implements View.OnTouch
     }
 
     private void setData(final String mac) {
-        db.collection("traffics").orderBy("time", Query.Direction.DESCENDING).limit(gap)
-                .get()
-                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                    @Override
-                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                        if (task.isSuccessful()) {
-                            int arrSize = task.getResult().size();
-                            arr.clear();    // 이거 안하면 그래프 이전 것과 겹침
-                            values.clear();
-                            for (QueryDocumentSnapshot document : task.getResult()) {
-                                int traffic = document.getLong(mac).intValue();
-                                String time = document.getString("time");
-                                //Log.d("DATE", "time: " + time);
-                                //Log.d("PUCK", "7c5c8d7drrr_traffic: " + traffic);
-                                arr.add(time.substring(11));
-                                values.add(new Entry(--arrSize, traffic));  // Entry 1 부터 순서대로 그래프에 출력되는거라서 반대로 입력
-//                                Log.d(TAG, document.getId() + " => " + document.getData());
-                            }
-                            Collections.reverse(arr);
-                            Collections.reverse(values);    // 1부터 즉, 순서대로 되도록 뒤집음, 안 그러면 에러남
 
-                            mChart.getXAxis().setValueFormatter(new ChartXValueFormatter(arr));
+        if(gap == 17280){
+            try {
+                Thread.sleep(10000);   //  파이어스토어에 저장되는데 걸리는 시간 고려
+            }catch (Exception e){
 
-                            LineDataSet set1;
-                            if (mChart.getData() != null &&
-                                    mChart.getData().getDataSetCount() > 0) {
+            }
+            if(flag == 0){
+                flag = 1;   // 파이어스토어에서 데이터 불러오는거 50프로 완료
+                db.collection("traffics").orderBy("time", Query.Direction.DESCENDING).limit(8640)
+                        .get()
+                        .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                            @Override
+                            public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                                if (task.isSuccessful()) {
+                                    int arrSize = 144;
+                                    arr.clear();    // 이거 안하면 그래프 이전 것과 겹침
+                                    values.clear();
 
-                                set1 = (LineDataSet) mChart.getData().getDataSetByIndex(0);
-                                set1.setValues(values);
-                                set1.setLabel(nick);
+                                    int num = 1;
+                                    int traffic_sum = 0;
+
+                                    for (QueryDocumentSnapshot document : task.getResult()) {
+                                        try{
+                                            List ls = (List)document.getData().get(mac);
+                                            int traffic;
+                                            if(type == 0)   // traffic
+                                                traffic = Integer.parseInt(ls.get(0).toString());
+                                            else            // command
+                                                traffic = Integer.parseInt(ls.get(1).toString());
+//                                            int traffic = document.getLong(mac).intValue();     // 여기서 리스트에 담긴 데이터 어떻게 가져올지?
+                                            traffic_sum += traffic;
+
+                                            if(num%120 == 0){   // 10분마다 시간과 트래픽 평균값 입력
+                                                String time = document.getString("time");
+                                                arr.add(time.substring(11));
+                                                values.add(new Entry(--arrSize, traffic_sum/120));  // Entry 1 부터 순서대로 그래프에 출력되는거라서 반대로 입력
+                                                middle_time = time;
+                                                traffic_sum = 0;
+                                                Log.e("time11",time);
+                                            }
+                                        }catch (NullPointerException e){
+                                            if(num%120 == 0){   // 10분마다 시간과 트래픽 평균값 입력
+                                                String time = document.getString("time");
+                                                arr.add(time.substring(11));
+                                                values.add(new Entry(--arrSize, traffic_sum/120));  // Entry 1 부터 순서대로 그래프에 출력되는거라서 반대로 입력
+                                                middle_time = time;
+                                                traffic_sum = 0;
+                                                Log.e("time2222",time);
+                                            }
+                                        }
+                                        num++;
+                                    }
+
+                                } else {
+                                    Log.w(TAG, "Error getting documents.", task.getException());
+                                }
+                                Log.e("aaaaaaaaaaaaaaaaaa",arr.size()+","+values.size());
+
+                                db.collection("traffics").whereLessThan("time",middle_time).orderBy("time", Query.Direction.DESCENDING).limit(8640)
+                                        .get()
+                                        .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                                            @Override
+                                            public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                                                if (task.isSuccessful()) {
+                                                    int arrSize = 72;
+                                                    int num = 1;
+                                                    int traffic_sum = 0;
+
+                                                    for (QueryDocumentSnapshot document : task.getResult()) {
+                                                        try{
+                                                            List ls = (List)document.getData().get(mac);
+                                                            int traffic;
+                                                            if(type == 0)   // traffic
+                                                                traffic = Integer.parseInt(ls.get(0).toString());
+                                                            else            // command
+                                                                traffic = Integer.parseInt(ls.get(1).toString());
+//                                                            int traffic = document.getLong(mac).intValue(); // 120배수인데 여기서 에러나면
+                                                            traffic_sum += traffic;
+
+                                                            if(num%120 == 0){   // 10분마다 시간과 트래픽 평균값 입력
+                                                                String time = document.getString("time");
+                                                                arr.add(time.substring(11));
+                                                                values.add(new Entry(--arrSize, traffic_sum/120));  // Entry 1 부터 순서대로 그래프에 출력되는거라서 반대로 입력
+//                                                                Log.e("sum",traffic_sum/120+"");
+                                                                traffic_sum = 0;
+                                                                Log.e("time333",time);
+                                                            }
+                                                        }catch (NullPointerException e){
+                                                            if(num%120 == 0){   // 10분마다 시간과 트래픽 평균값 입력
+                                                                String time = document.getString("time");
+                                                                arr.add(time.substring(11));
+                                                                values.add(new Entry(--arrSize, traffic_sum/120));  // Entry 1 부터 순서대로 그래프에 출력되는거라서 반대로 입력
+                                                                traffic_sum = 0;
+                                                                Log.e("time444",time);
+                                                            }
+                                                        }
+                                                        num++;
+                                                    }
+                                                    Log.e("ccccccccccccccccccc",arr.size()+","+values.size());
+                                                    Collections.reverse(arr);
+                                                    Collections.reverse(values);    // 1부터 즉, 순서대로 되도록 뒤집음, 안 그러면 에러남
+
+                                                    mChart.getXAxis().setValueFormatter(new ChartXValueFormatter(arr));
+
+                                                    LineDataSet set1;
+                                                    if (mChart.getData() != null &&
+                                                            mChart.getData().getDataSetCount() > 0) {
+
+                                                        set1 = (LineDataSet) mChart.getData().getDataSetByIndex(0);
+                                                        set1.setValues(values);
+                                                        set1.setLabel(nick);
 
 //                                set1.setLabel(mac);
-                                mChart.getData().notifyDataChanged();
-                                mChart.notifyDataSetChanged();
-                                mChart.invalidate();    // 이거 없으면 터치해야 그래프 나옴
+                                                        Log.i("tes","ttttttttttttttttttttt");
+                                                        mChart.getData().notifyDataChanged();
+                                                        mChart.notifyDataSetChanged();
+                                                        mChart.invalidate();    // 이거 없으면 터치해야 그래프 나옴
+                                                        Log.i("tes","ooooooooooooooooooooooo");
 
-                            } else {
 
-                                set1 = new LineDataSet(values, nick);
-                                set1.setDrawIcons(false);
-                                set1.enableDashedLine(10f, 5f, 0f); // 그래프 쌍곡선
-//                                set1.enableDashedHighlightLine(10f, 5f, 0f);    // 터치했을 때 나오는 주황색 라인 관련
-                                set1.setColor(Color.DKGRAY);   // 쌍곡선 색깔
-                                set1.setCircleColor(Color.DKGRAY);
-                                set1.setLineWidth(1f);
-                                set1.setCircleRadius(1f);
-                                set1.setDrawCircleHole(false);
-                                set1.setValueTextSize(9f);
-                                set1.setDrawFilled(true);
+                                                    } else {
+
+                                                        set1 = new LineDataSet(values, nick);
+                                                        set1.setDrawIcons(false);
+                                                        set1.enableDashedLine(10f, 5f, 0f); // 그래프 쌍곡선
+                                                        set1.enableDashedHighlightLine(10f, 5f, 0f);    // 터치했을 때 나오는 주황색 라인 관련
+                                                        set1.setColor(Color.DKGRAY);   // 쌍곡선 색깔
+                                                        set1.setCircleColor(Color.DKGRAY);
+                                                        set1.setLineWidth(1f);
+                                                        set1.setCircleRadius(1f);
+                                                        set1.setDrawCircleHole(false);
+                                                        set1.setValueTextSize(9f);
+                                                        set1.setDrawFilled(true);
 //                                set1.setFormLineWidth(1f);
 //                                set1.setFormLineDashEffect(new DashPathEffect(new float[]{10f, 5f}, 0f));
 //                                set1.setFormSize(15.f);
 //                                set1.setLabel(nick);
 //                                set1.setHighLightColor(Color.BLUE);
-                                set1.setHighlightEnabled(false);
+                                                        set1.setHighlightEnabled(true);
 
-                                if (Utils.getSDKInt() >= 18) {
-                                    Drawable drawable = ContextCompat.getDrawable(TestGraphActivity.this, R.drawable.fade_blue);
-                                    set1.setFillDrawable(drawable);
+                                                        if (Utils.getSDKInt() >= 18) {
+                                                            Drawable drawable = ContextCompat.getDrawable(TestGraphActivity.this, R.drawable.fade_blue);
+                                                            set1.setFillDrawable(drawable);
+                                                        } else {
+                                                            set1.setFillColor(Color.DKGRAY);
+                                                        }
+
+
+                                                        ArrayList<ILineDataSet> dataSets = new ArrayList<>();
+                                                        dataSets.add(set1);
+                                                        LineData data = new LineData(dataSets);
+                                                        mChart.invalidate();    // 이거 없으면 터치해야 그래프 나옴
+                                                        mChart.setData(data);
+
+                                                    }
+
+                                                    LimitLine eventline = new LimitLine(event, "EVENT");
+                                                    eventline.setLineWidth(4f);
+                                                    eventline.enableDashedLine(10f, 10f, 0f);
+                                                    eventline.setLabelPosition(LimitLine.LimitLabelPosition.RIGHT_TOP);
+                                                    eventline.setTextSize(10f);
+                                                    YAxis leftAxis = mChart.getAxisLeft();
+//                            int max;
+                                                    if((int)mChart.getYMax() > event)
+                                                        max = (int)mChart.getYMax();
+                                                    else
+                                                        max = event;
+
+                                                    int aa = ((ViewGroup)textView.getParent()).getHeight(); // 처음 그래프 나올 때 뷰와 라인 위치 맞춰줌
+                                                    int kk = textView.getHeight();
+
+                                                    if(max < 10)
+                                                        max = 10;
+                                                    int h = (int)(aa - 2.5*kk + event*(8*kk - 3*aa)/(3.6*max));
+                                                    if(max == 0){   // 모두 0 일 때 view 를 바닥으로 내림
+//                                max = 1;
+                                                        h = (int)(aa - 2.5*kk);
+                                                    }
+                                                    textView.setY(h);
+                                                    Log.e("hhhh",h+"");
+                                                    if((int)mChart.getYMax() < 10 && max < 10){
+                                                        max = 10;
+
+                                                    }
+
+
+                                                    leftAxis.setAxisMaximum((int)(max*1.2));    //
+                                                    leftAxis.removeAllLimitLines();
+                                                    leftAxis.addLimitLine(eventline);
+
+                                                    flag = 0;   // 파이어스토어에서 나머지 50프로 불러오기 완료됐으므로 다시 처음부분부터 불러올 수 있게하는 장치
+                                                } else {
+                                                    Log.w(TAG, "Error getting documents.", task.getException());
+                                                }
+                                            }
+                                        });
+                            }
+                        });
+            }
+        }else{
+            db.collection("traffics").orderBy("time", Query.Direction.DESCENDING).limit(10)
+                    .get()
+                    .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                        @Override
+                        public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                            if (task.isSuccessful()) {
+                                int arrSize = task.getResult().size();
+                                arr.clear();    // 이거 안하면 그래프 이전 것과 겹침
+                                values.clear();
+
+                                for (QueryDocumentSnapshot document : task.getResult()) {
+                                    try{
+                                        List ls = (List)document.getData().get(mac);
+                                        int traffic;
+                                        if(type == 0)   // traffic
+                                            traffic = Integer.parseInt(ls.get(0).toString());
+                                        else            // command
+                                            traffic = Integer.parseInt(ls.get(1).toString());
+//                                        int traffic = document.getLong(mac).intValue();
+                                        String time = document.getString("time");
+                                        Log.e("traffic"+arrSize,traffic+","+time);
+                                        arr.add(time.substring(11));
+                                        values.add(new Entry(--arrSize, traffic));  // Entry 1 부터 순서대로 그래프에 출력되는거라서 반대로 입력
+                                    }catch (NullPointerException e){
+                                        String time = document.getString("time");
+                                        arr.add(time.substring(11));
+                                        values.add(new Entry(--arrSize,0));  // mac 주소의 트래픽값 없을 때 0으로
+                                    }
+                                }
+                                Collections.reverse(arr);
+                                Collections.reverse(values);    // 1부터 즉, 순서대로 되도록 뒤집음, 안 그러면 에러남
+
+                                mChart.getXAxis().setValueFormatter(new ChartXValueFormatter(arr));
+
+                                LineDataSet set1;
+                                if (mChart.getData() != null &&
+                                        mChart.getData().getDataSetCount() > 0) {
+
+                                    set1 = (LineDataSet) mChart.getData().getDataSetByIndex(0);
+                                    set1.setValues(values);
+                                    set1.setLabel(nick);
+
+//                                set1.setLabel(mac);
+                                    mChart.getData().notifyDataChanged();
+                                    mChart.notifyDataSetChanged();
+                                    mChart.invalidate();    // 이거 없으면 터치해야 그래프 나옴
+
                                 } else {
-                                    set1.setFillColor(Color.DKGRAY);
+
+                                    set1 = new LineDataSet(values, nick);
+                                    set1.setDrawIcons(false);
+                                    set1.enableDashedLine(10f, 5f, 0f); // 그래프 쌍곡선
+                                    set1.enableDashedHighlightLine(10f, 5f, 0f);    // 터치했을 때 나오는 주황색 라인 관련
+                                    set1.setColor(Color.DKGRAY);   // 쌍곡선 색깔
+                                    set1.setCircleColor(Color.DKGRAY);
+                                    set1.setLineWidth(1f);
+                                    set1.setCircleRadius(1f);
+                                    set1.setDrawCircleHole(false);
+                                    set1.setValueTextSize(9f);
+                                    set1.setDrawFilled(true);
+//                                set1.setFormLineWidth(1f);
+//                                set1.setFormLineDashEffect(new DashPathEffect(new float[]{10f, 5f}, 0f));
+//                                set1.setFormSize(15.f);
+//                                set1.setLabel(nick);
+//                                set1.setHighLightColor(Color.BLUE);
+                                    set1.setHighlightEnabled(true);
+
+                                    if (Utils.getSDKInt() >= 18) {
+                                        Drawable drawable = ContextCompat.getDrawable(TestGraphActivity.this, R.drawable.fade_blue);
+                                        set1.setFillDrawable(drawable);
+                                    } else {
+                                        set1.setFillColor(Color.DKGRAY);
+                                    }
+
+
+                                    ArrayList<ILineDataSet> dataSets = new ArrayList<>();
+                                    dataSets.add(set1);
+                                    LineData data = new LineData(dataSets);
+                                    mChart.invalidate();    // 이거 없으면 터치해야 그래프 나옴
+                                    mChart.setData(data);
+
+                                }
+
+                                LimitLine eventline = new LimitLine(event, "EVENT");
+                                eventline.setLineWidth(4f);
+                                eventline.enableDashedLine(10f, 10f, 0f);
+                                eventline.setLabelPosition(LimitLine.LimitLabelPosition.RIGHT_TOP);
+                                eventline.setTextSize(10f);
+                                YAxis leftAxis = mChart.getAxisLeft();
+//                            int max;
+                                if((int)mChart.getYMax() > event)
+                                    max = (int)mChart.getYMax();
+                                else
+                                    max = event;
+
+                                int aa = ((ViewGroup)textView.getParent()).getHeight(); // 처음 그래프 나올 때 뷰와 라인 위치 맞춰줌
+                                int kk = textView.getHeight();
+
+                                if(max < 10)
+                                    max = 10;
+                                int h = (int)(aa - 2.5*kk + event*(8*kk - 3*aa)/(3.6*max));
+                                if(max == 0){   // 모두 0 일 때 view 를 바닥으로 내림
+//                                max = 1;
+                                    h = (int)(aa - 2.5*kk);
+                                }
+                                textView.setY(h);
+                                Log.e("hhhh",h+"");
+                                if((int)mChart.getYMax() < 10 && max < 10){
+                                    max = 10;
+
                                 }
 
 
-                                ArrayList<ILineDataSet> dataSets = new ArrayList<>();
-                                dataSets.add(set1);
-                                LineData data = new LineData(dataSets);
-                                mChart.invalidate();    // 이거 없으면 터치해야 그래프 나옴
-                                mChart.setData(data);
+                                leftAxis.setAxisMaximum((int)(max*1.2));    //                            leftAxis.removeAllLimitLines();
+                                leftAxis.removeAllLimitLines();
+                                leftAxis.addLimitLine(eventline);
 
+
+                            } else {
+                                Log.w(TAG, "Error getting documents.", task.getException());
                             }
-
-                            LimitLine eventline = new LimitLine(event, "EVENT");
-                            eventline.setLineWidth(4f);
-                            eventline.enableDashedLine(10f, 10f, 0f);
-                            eventline.setLabelPosition(LimitLine.LimitLabelPosition.RIGHT_TOP);
-                            eventline.setTextSize(10f);
-                            YAxis leftAxis = mChart.getAxisLeft();
-//                            int max;
-                            if((int)mChart.getYMax() > event)
-                                max = (int)mChart.getYMax();
-                            else
-                                max = event;
-
-                            int aa = ((ViewGroup)textView.getParent()).getHeight(); // 처음 그래프 나올 때 뷰와 라인 위치 맞춰줌
-                            int kk = textView.getHeight();
-
-                            if(max < 10)
-                                max = 10;
-                            int h = (int)(aa - 2.5*kk + event*(8*kk - 3*aa)/(3.6*max));
-                            if(max == 0){   // 모두 0 일 때 view 를 바닥으로 내림
-//                                max = 1;
-                                h = (int)(aa - 2.5*kk);
-                            }
-                            textView.setY(h);
-                            Log.e("hhhh",h+"");
-                            if((int)mChart.getYMax() < 10 && max < 10){
-                                max = 10;
-
-                            }
-
-
-                            leftAxis.setAxisMaximum((int)(max*1.2));    //                            leftAxis.removeAllLimitLines();
-                            leftAxis.removeAllLimitLines();
-                            leftAxis.addLimitLine(eventline);
-
-
-                        } else {
-                            Log.w(TAG, "Error getting documents.", task.getException());
                         }
-                    }
-                });
+                    });
+        }
+
     }
 
     public void showList(View view) {           // 'BUTTON' 버튼 눌럿을 떄
@@ -346,6 +569,7 @@ public class TestGraphActivity extends AppCompatActivity implements View.OnTouch
                 System.out.println("six : index " + index + "\n");
                 event = eventList.get(index);
                 mac = deviceList.get(index);
+                type = typeList.get(index);
             }
         });
 
@@ -386,7 +610,7 @@ public class TestGraphActivity extends AppCompatActivity implements View.OnTouch
             Log.d("max11:",max+"");
             double ratio = (parentHeight - 2*k - (v.getY() + 0.5*k))/(parentHeight - (int)((8.0)/3)*k);  // 그래프 y축에 대한 event 의 비율
 
-            if((int)mChart.getYMax() < 10 && max < 10){     // 그래프 y값 10 미만일때 ( 모두 0일때를 위한 것 )
+            if((int)mChart.getYMax() < 10 && max < 10){     // 그래프 y값 10 미만일때 가상의 max 설정( 모두 0일때를 위한 것 )
                 max = 10;
                 top = 12;
             }
