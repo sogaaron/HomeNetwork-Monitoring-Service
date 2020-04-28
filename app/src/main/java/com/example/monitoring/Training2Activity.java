@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 
 import static android.graphics.Color.LTGRAY;
@@ -48,11 +49,22 @@ public class Training2Activity extends AppCompatActivity {
     ArrayList<Integer> offTraffic = new ArrayList<>();
     ArrayList<Integer> allTraffic = new ArrayList<>();
 
+    ArrayList<Integer> onCommand = new ArrayList<>();
+    ArrayList<Integer> offCommand = new ArrayList<>();
+    ArrayList<Integer> allCommand = new ArrayList<>();
 
-    int onSum, offSum = 0;
-    double event = 0;
+    int onSumTraffic, offSumTraffic = 0;
+    int eventTraffic = 0;
+
+    int onSumCommand, offSumCommand = 0;
+    int eventCommand = 0;
+
+    int finalEvent = 0;
+
     int times = 0;
     String mac;
+    int type = 0;
+
 
 
 
@@ -86,7 +98,7 @@ public class Training2Activity extends AppCompatActivity {
     private void check(final String mac) {
         Log.d(TAG, "MAC : "+mac);
 
-        db.collection("test")
+        db.collection("traffics")
                 //        .whereEqualTo("nickname", selectedNickname)
                 .orderBy("time", Query.Direction.DESCENDING)
                 .limit(6)
@@ -97,7 +109,9 @@ public class Training2Activity extends AppCompatActivity {
                         if (task.isSuccessful()) {
                             for (QueryDocumentSnapshot document : task.getResult()) {
                                 try {
-                                    int traffic = document.getLong("gabi").intValue();
+                                    List ls = (List)document.getData().get(mac);
+                                    int traffic = Integer.parseInt(ls.get(0).toString());
+                                    int command = Integer.parseInt(ls.get(1).toString());
                                     String time = document.getString("time");
 
                                     Calendar cal = Calendar.getInstance();
@@ -111,6 +125,7 @@ public class Training2Activity extends AppCompatActivity {
                                     }
 
                                     allTraffic.add(traffic);
+                                    allCommand.add(command);
                                     //time
                                     Log.d(TAG, "0. " + onTime.get(0).getTime() + "  ~ "+ cal.getTime() + "  ~ " + offTime.get(0).getTime());
                                     Log.d(TAG, String.valueOf(cal.after(onTime.get(0)) && cal.before(offTime.get(0))));
@@ -124,7 +139,14 @@ public class Training2Activity extends AppCompatActivity {
                                     if((cal.after(onTime.get(0)) && cal.before(offTime.get(0)))|| (cal.after(onTime.get(1)) && cal.before(offTime.get(1))) || (cal.after(onTime.get(2)) && cal.before(offTime.get(2)))){
                                         //작동할 때의 traffic
                                         onTraffic.add(traffic);
-                                    }else offTraffic.add(traffic);
+                                        onCommand.add(command);
+                                        Log.d(TAG,"onTraffic" + onTraffic);
+                                    }else {
+                                        offTraffic.add(traffic);
+                                        offCommand.add(command);
+                                        Log.d(TAG,"offTraffic" + offTraffic);
+
+                                    }
                                     //Log.d(TAG,"traffic DATE" +time + "       " + date);
 
                                     Log.d(TAG, document.getId() + " => " + document.getData());
@@ -141,20 +163,39 @@ public class Training2Activity extends AppCompatActivity {
                         Collections.sort(offTraffic);
                         Collections.reverse(offTraffic);
 
+                        Collections.sort(onCommand);
+                        Collections.sort(offCommand);
+                        Collections.reverse(onCommand);
+
                         onTraffic.remove(0);
                         offTraffic.remove(0);
 
+                        onCommand.remove(0);
+                        offCommand.remove(0);
+
                         int i = 0;
                         for(Integer value : onTraffic){
-                            Log.d(TAG,  "ontime : " +i+". " + value.intValue());
-                            onSum += value.intValue();
+                            Log.d(TAG,  "ontimeTraffic : " +i+". " + value.intValue());
+                            onSumTraffic += value.intValue();
                             i++;
                         }
                         int j = 0;
                         for(Integer value : offTraffic){
-                            Log.d(TAG,  "offtime : "+ j+". " + value.intValue());
-                            offSum += value.intValue();
+                            Log.d(TAG,  "offtimeTraffic : "+ j+". " + value.intValue());
+                            offSumTraffic += value.intValue();
                             j++;
+                        }
+                        int m = 0;
+                        for(Integer value : onCommand){
+                            Log.d(TAG,  "ontimeCommand : " +m+". " + value.intValue());
+                            onSumCommand += value.intValue();
+                            m++;
+                        }
+                        int n = 0;
+                        for(Integer value : offCommand){
+                            Log.d(TAG,  "offtimeCommand : "+ n+". " + value.intValue());
+                            offSumCommand += value.intValue();
+                            n++;
                         }
 
 
@@ -176,13 +217,27 @@ public class Training2Activity extends AppCompatActivity {
                         Log.d(TAG,"max " +  allTraffic.get(maxIndex) + "  d "+ max + "  event  " + event);
                         // all traffic
 */
-                        //average
-                        double onAverage = onSum / onTraffic.size();
-                        double offAverage = offSum / offTraffic.size();
 
-                        event = (onAverage + offAverage) / 2;
-                        Log.d(TAG,"event : " + event);
                         //average
+                        double onAverageTraffic = onSumTraffic / onTraffic.size();
+                        double offAverageTraffic = offSumTraffic / offTraffic.size();
+
+                        double onAverageCommand = onSumCommand / onCommand.size();
+                        double offAverageCommand = offSumTraffic / offTraffic.size();
+
+                        eventTraffic = (int) ((onAverageTraffic + offAverageTraffic) / 2);
+                        eventCommand = (int) ((onAverageCommand + offAverageCommand) / 2);
+
+                        Log.d(TAG,"eventTraffic : " + eventTraffic + "  eventCommand" + eventCommand);
+                        //average
+
+                        if (eventTraffic-eventCommand>1000){
+                            type=0;
+                            finalEvent = eventTraffic;
+                        }else{
+                            type=1;
+                            finalEvent = eventCommand;
+                        }
 
                         db.collection("gabriel")
                                 .whereEqualTo("mac", mac)
@@ -192,7 +247,8 @@ public class Training2Activity extends AppCompatActivity {
                                     public void onComplete(@NonNull Task<QuerySnapshot> task) {
                                         if (task.isSuccessful()) {
                                             for (QueryDocumentSnapshot document : task.getResult()) {
-                                                db.collection("gabriel").document(document.getId()).update("normal", event);
+                                                db.collection("gabriel").document(document.getId()).update("normal", finalEvent);
+                                                db.collection("gabriel").document(document.getId()).update("type", type);
                                                 Log.d(TAG, document.getId() + " => " + document.getData());
                                             }
 
@@ -201,7 +257,7 @@ public class Training2Activity extends AppCompatActivity {
                                         }
                                         AlertDialog.Builder editAD = new AlertDialog.Builder(Training2Activity.this);
                                         editAD.setTitle("")
-                                                .setMessage("이벤트 등록이 완료되었습니다.\n" + mac + " event : " + event)
+                                                .setMessage(mac+"의 이벤트 등록이 완료되었습니다.\n" + "event : " + finalEvent + "\ntype : "+ type)
                                                 .setPositiveButton("확인", new DialogInterface.OnClickListener() {
                                                     @Override
                                                     public void onClick(DialogInterface dialog, int which) {
