@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".Training2ButtonActivity">
+
+    <View
+        android:id="@+id/view2"
+        android:layout_width="match_parent"
+        android:layout_height="150dp" />
+
+    <TextView
+        android:id="@+id/textViewTraining"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:layout_gravity="center"
+        android:text="시작 버튼을 눌러 트레이닝을 시켜주세요\n 왼쪽은 작동 트레이닝,\n오른쪽은 미작동 트레이닝 입니다.\n트레이닝을 끝내려면 버튼을 다시 누르세요."
+        android:textSize="14sp" />
+
+    <View
+        android:id="@+id/view3"
+        android:layout_width="match_parent"
+        android:layout_height="100dp" />
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/onButtonT"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="onTraining"
+            android:text="작동 시작" />
+
+        <Button
+            android:id="@+id/offButtonT"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="offTraining"
+            android:enabled = "false"
+            android:text="미작동 시작" />
+
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/finishButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:onClick="finishAndShowResult"
+        android:text="트레이닝 결과보기" />
+
+</LinearLayout>

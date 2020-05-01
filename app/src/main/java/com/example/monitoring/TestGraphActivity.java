@@ -419,7 +419,7 @@ public class TestGraphActivity extends AppCompatActivity implements View.OnTouch
                         });
             }
         }else{
-            db.collection("traffics").orderBy("time", Query.Direction.DESCENDING).limit(10)
+            db.collection("traffics").orderBy("time", Query.Direction.DESCENDING).limit(gap)
                     .get()
                     .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
                         @Override
