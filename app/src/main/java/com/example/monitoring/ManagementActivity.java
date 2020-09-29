@@ -225,9 +225,9 @@ public class ManagementActivity extends AppCompatActivity implements View.OnClic
 
                 //oAdapter = new DeviceListAdapter(oData);
 
-                String strMsg2 = "선택한 아이템의 position 은 "+position+" 입니다.\nTitle 텍스트 :" + oTextNickname.getText();
-                Toast myToast2 = Toast.makeText(this.getApplicationContext(), strMsg2, Toast.LENGTH_SHORT);
-                myToast2.show();
+//                String strMsg2 = "선택한 아이템의 position 은 "+position+" 입니다.\nTitle 텍스트 :" + oTextNickname.getText();
+//                Toast myToast2 = Toast.makeText(this.getApplicationContext(), strMsg2, Toast.LENGTH_SHORT);
+//                myToast2.show();
 
                 break;
         }

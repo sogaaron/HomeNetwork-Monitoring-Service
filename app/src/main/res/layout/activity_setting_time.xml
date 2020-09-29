@@ -38,5 +38,5 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="20dp"
         android:onClick="addTime"
-        android:text="지정한 시간에 알림 없음"/>
+        android:text="추가"/>
 </LinearLayout>

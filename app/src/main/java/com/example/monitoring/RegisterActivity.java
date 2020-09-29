@@ -78,12 +78,14 @@ public class RegisterActivity extends AppCompatActivity {
     ArrayList<String> unregisetered_VendorList = new ArrayList();
 
     String[] items;
+    String newDevice;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register);
+
         view = findViewById(R.id.reg_layout);
         et = findViewById(R.id.macText);
         et.setFilters(new InputFilter[]{filterAlphaNum});
@@ -91,6 +93,11 @@ public class RegisterActivity extends AppCompatActivity {
         b1 = findViewById(R.id.ok_button);
         b2 = findViewById(R.id.cancel_button);
         b3 = findViewById(R.id.search_button);
+
+        Intent intent = getIntent();
+        newDevice = intent.getExtras().getString("newDevice");
+        if (newDevice!=null)
+            et.setText(newDevice);
 
 
         b1.setOnClickListener(new View.OnClickListener() {
@@ -144,7 +151,7 @@ public class RegisterActivity extends AppCompatActivity {
                                             .setPositiveButton("확인", new DialogInterface.OnClickListener() {
                                                 @Override
                                                 public void onClick(DialogInterface dialog, int which) {
-                                                    Intent intent = new Intent(RegisterActivity.this,Training2Activity.class);
+                                                    Intent intent = new Intent(RegisterActivity.this,Training2ButtonActivity.class);
                                                     intent.putExtra("mac", finalMacinput);
                                                     startActivity(intent);
                                                 }
@@ -322,7 +329,7 @@ public class RegisterActivity extends AppCompatActivity {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         dialog.cancel();
-                        et.setText(mac);
+                        et.setText(mac.substring(0,12));
                     }
                 })
                 .show();

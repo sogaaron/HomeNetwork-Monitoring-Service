@@ -1,26 +1,23 @@
 package com.example.monitoring;
 
 public class SettingTimeListViewItem {
-    private String time;
-    private boolean flag;
-    public SettingTimeListActivity onCheckedListener;
+    public String time;
+    public boolean flag;
+    //public SettingTimeListActivity onCheckedListener;
+    public SettingTimeListActivity onClickListener;
 
-
+/*
     public SettingTimeListViewItem(){
 
     }
-    public void setTime(String time) {
-        this.time = time;
-    }
+    */
 
     public String getTime() {
         return time;
-    }
-    public void setFlag(boolean flag) {
-        this.flag = flag;
     }
 
     public boolean getFlag() {
         return flag;
     }
+
 }

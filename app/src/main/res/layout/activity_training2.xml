@@ -1,25 +1,62 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     tools:context=".Training2Activity">
+
+    <View
+        android:id="@+id/view2"
+        android:layout_width="match_parent"
+        android:layout_height="150dp" />
 
     <TextView
         android:id="@+id/textViewTraining"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
-        android:text="시작 버튼을 누른 후에\n기기를 작동해주세요\n\n중단을 누른 후에는\n기기 작동을 멈춰주세요"
-        android:textSize="24sp" />
+        android:layout_gravity="center"
+        android:text="시작 버튼을 눌러 트레이닝을 시켜주세요\n 왼쪽은 작동 트레이닝,\n오른쪽은 미작동 트레이닝 입니다.\n트레이닝을 끝내려면 버튼을 다시 누르세요."
+        android:textSize="14sp" />
 
-    <Button
-        android:id="@+id/buttonT"
+    <View
+        android:id="@+id/view3"
+        android:layout_width="match_parent"
+        android:layout_height="100dp" />
+
+    <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/textViewTraining"
-        android:layout_centerHorizontal="true"
-        android:onClick="training"
-        android:text="시작" />
-</RelativeLayout>
+        android:layout_gravity="center"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/onButtonT"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="#D6D6D6"
+            android:onClick="onTraining"
+            android:text="작동 시작" />
+
+        <Button
+            android:id="@+id/offButtonT"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="#D6D6D6"
+            android:enabled="false"
+            android:onClick="offTraining"
+            android:text="미작동 시작" />
+
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/finishButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:onClick="finishAndShowResult"
+        android:text="트레이닝 결과보기" />
+
+</LinearLayout>

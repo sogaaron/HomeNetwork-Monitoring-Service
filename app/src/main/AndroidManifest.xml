@@ -12,7 +12,8 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".TrainingResultActivity"></activity>
+        <activity android:name=".CheckAccessActivity"></activity>
+        <activity android:name=".TrainingResultActivity" />
         <activity android:name=".Training2ButtonActivity" />
         <activity android:name=".TrainingResultBarActivity" />
         <activity android:name=".TrainingResult2ButtonActivity" />
@@ -20,7 +21,6 @@
         <activity android:name=".TrainingActivity" />
         <activity android:name=".SettingTimeListActivity" />
         <activity android:name=".SettingTimeActivity" />
-        <activity android:name=".SettingActivity" />
         <activity android:name=".LogActivity" />
         <activity android:name=".TestGraphActivity" />
         <activity android:name=".EditNicknameActivity" />

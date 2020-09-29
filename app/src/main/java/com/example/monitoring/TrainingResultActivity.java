@@ -6,6 +6,7 @@ import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.RadioButton;
 
 import androidx.annotation.NonNull;
@@ -31,42 +32,42 @@ import com.google.firebase.firestore.QuerySnapshot;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
-public class TrainingResult2ButtonActivity extends AppCompatActivity {
+public class TrainingResultActivity extends AppCompatActivity {
     private LineChart mChart;
-    FirebaseFirestore db = FirebaseFirestore.getInstance();
-
     private  final String TAG = getClass().getSimpleName().trim();
-
-    //setData()
     ArrayList<Entry> trafficValue = new ArrayList<>();
     ArrayList<Entry> commandValue = new ArrayList<>();
-    String start, end;
-    ArrayList<Integer> index;
-
 
     ArrayList<Entry> values = new ArrayList<>();
-    ArrayList<Entry> valuesOn = new ArrayList<>();
-    ArrayList<Entry> valuesOff = new ArrayList<>();
+
+
+
+    ArrayList<String> arr = new ArrayList();
+    String[] items;
 
     String mac;
     int type;
     int eventT, eventC, event;
+    String start, end;
+
     int max;
 
-    ArrayList<String> arr = new ArrayList();
-    int size;
-    private ArrayList<Integer> onTrafficGraph;
-    private ArrayList<Integer> offTrafficGraph;
-    //private ArrayList<Integer> noTrafficGraph;
-    private ArrayList<Integer> onCommandGraph;
-    private ArrayList<Integer> offCommandGraph;
-    //private ArrayList<Integer> noCommandGraph;
+    ArrayList<Integer> index, index2;
+    ArrayList<Integer> colors = new ArrayList<>();
+
+
+    int gap = 60;
+    FirebaseFirestore db = FirebaseFirestore.getInstance();
+    ArrayList mins = new ArrayList();
+    ArrayAdapter adt;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_training_result2_button);
+        setContentView(R.layout.activity_training_result);
         RadioButton type0 = findViewById(R.id.type0Button);
         RadioButton type1 = findViewById(R.id.type1Button);
 
@@ -79,25 +80,10 @@ public class TrainingResult2ButtonActivity extends AppCompatActivity {
         type = intent.getExtras().getInt("type");
         eventT = intent.getExtras().getInt("eventT");
         eventC = intent.getExtras().getInt("eventC");
-        //start = intent.getExtras().getString("start");
-        //end = intent.getExtras().getString("end");
-        //index = intent.getExtras().getIntegerArrayList("index");
-
-        onTrafficGraph = intent.getExtras().getIntegerArrayList("onTrafficGraph");
-        offTrafficGraph = intent.getExtras().getIntegerArrayList("offTrafficGraph");
-        //noTrafficGraph = intent.getExtras().getIntegerArrayList("noTrafficGraph");
-        onCommandGraph = intent.getExtras().getIntegerArrayList("onCommandGraph");
-        offCommandGraph = intent.getExtras().getIntegerArrayList("offCommandGraph");
-        //noCommandGraph = intent.getExtras().getIntegerArrayList("noCommandGraph");
-        arr = intent.getExtras().getStringArrayList("arr");
-        size = intent.getExtras().getInt("size");
-
-        Collections.reverse(arr);
-
-        Log.d(TAG,"onCommandGraph" + onCommandGraph);
-        Log.d(TAG,"offCommandGraph" + offCommandGraph);
-        //Log.d(TAG,"noCommandGraph" + noCommandGraph);
-        Log.d(TAG, "size"+size);
+        start = intent.getExtras().getString("start");
+        end = intent.getExtras().getString("end");
+        index = intent.getExtras().getIntegerArrayList("index");    // 작동중일 때의 index 리스트
+        index2 = intent.getExtras().getIntegerArrayList("index2");    // 미작동중일 때의 index 리스트
 
 
         if (type == 0){
@@ -153,143 +139,19 @@ public class TrainingResult2ButtonActivity extends AppCompatActivity {
         leftAxis.setDrawLimitLinesBehindData(false);
 
         mChart.getAxisRight().setEnabled(false);
-        setData2();
-    }
-
-    private void setData2() {
-        mChart.getXAxis().setValueFormatter(new ChartXValueFormatter(arr));
-        Log.d(TAG, "set2 ");
-
-        if (type==0) {
-            valuesOn.clear();
-            valuesOff.clear();
-            values.clear();
-            Log.d(TAG, "type 0 ");
-
-            for(int i=size;i>=0;i--){
-                //values.add(new Entry(i,noTrafficGraph.get(size-i)));
-                valuesOn.add(new Entry(i,onTrafficGraph.get(size-i)));
-                valuesOff.add(new Entry(i,offTrafficGraph.get(size-i)));
+        setData();
+        Timer timer = new Timer();
+        TimerTask tt = new TimerTask() {
+            @Override
+            public void run() {
+                mChart.notifyDataSetChanged();
+                setData();
             }
-        }
-        else if (type==1){
-            valuesOn.clear();
-            valuesOff.clear();
-            values.clear();
-            Log.d(TAG, "type 1 ");
-
-            for(int i=size;i>=0;i--){
-                //values.add(new Entry(i,noCommandGraph.get(size-i)));
-                valuesOn.add(new Entry(i,onCommandGraph.get(size-i)));
-                valuesOff.add(new Entry(i,offCommandGraph.get(size-i)));
-            }
-        }
-
-        Collections.reverse(values);
-        Collections.reverse(valuesOn);
-        Collections.reverse(valuesOff);
-
-        Log.d(TAG, "on values "+ valuesOn);
-        Log.d(TAG, "off values "+ valuesOff);
-        Log.d(TAG, "no values "+ values);
-
-        LineDataSet set1;
-        LineDataSet set2;
-        LineDataSet set3;
-
-
-        Log.d(TAG, "else");
-        set1 = new LineDataSet(valuesOff, "off");
-        set1.setDrawIcons(false);
-        set1.enableDashedLine(10f, 5f, 0f); // 그래프 쌍곡선
-        set1.enableDashedHighlightLine(10f, 5f, 0f);    // 터치했을 때 나오는 주황색 라인 관련
-        set1.setColor(Color.BLUE);   // 쌍곡선 색깔
-        set1.setCircleColor(Color.BLUE);
-        set1.setLineWidth(1f);
-        set1.setCircleRadius(1f);
-        set1.setDrawCircleHole(false);
-        set1.setValueTextSize(9f);
-        set1.setDrawFilled(true);
-        set1.setHighlightEnabled(true);
-        set1.setDrawValues(false);
-
-        set2 = new LineDataSet(valuesOn, "on");
-        set2.setDrawIcons(false);
-        set2.enableDashedLine(10f, 5f, 0f); // 그래프 쌍곡선
-        set2.enableDashedHighlightLine(10f, 5f, 0f);    // 터치했을 때 나오는 주황색 라인 관련
-        set2.setColor(Color.RED);   // 쌍곡선 색깔
-        set2.setCircleColor(Color.RED);
-        set2.setLineWidth(1f);
-        set2.setCircleRadius(1f);
-        set2.setDrawCircleHole(false);
-        set2.setValueTextSize(9f);
-        set2.setDrawFilled(true);
-        set2.setHighlightEnabled(true);
-        set2.setDrawValues(false);
-
-/*
-        set3 = new LineDataSet(values,"no");
-        set3.setDrawIcons(false);
-        set3.enableDashedLine(10f, 5f, 0f); // 그래프 쌍곡선
-        set3.enableDashedHighlightLine(10f, 5f, 0f);    // 터치했을 때 나오는 주황색 라인 관련
-        set3.setColor(Color.LTGRAY);   // 쌍곡선 색깔
-        set3.setCircleColor(Color.LTGRAY);
-        set3.setLineWidth(1f);
-        set3.setCircleRadius(1f);
-        set3.setDrawCircleHole(false);
-        set3.setValueTextSize(9f);
-        set3.setDrawFilled(true);
-        set3.setHighlightEnabled(true);
-        set3.setDrawValues(false);
-*/
-        if (Utils.getSDKInt() >= 18) {
-            Drawable drawable = ContextCompat.getDrawable(TrainingResult2ButtonActivity.this, R.drawable.fade_blue);
-            Drawable drawable2 = ContextCompat.getDrawable(TrainingResult2ButtonActivity.this, R.drawable.fade_red);
-
-            set1.setFillDrawable(drawable);
-            set2.setFillDrawable(drawable2);
-            //set3.setFillDrawable(drawable);
-        } else {
-            set1.setFillColor(Color.DKGRAY);
-            set2.setFillColor(Color.DKGRAY);
-            //set3.setFillColor(Color.DKGRAY);
-        }
-
-
-        ArrayList<ILineDataSet> dataSets = new ArrayList<>();
-        dataSets.add(set1);
-        dataSets.add(set2);
-        //dataSets.add(set3);
-        LineData data = new LineData(dataSets);
-        mChart.invalidate();    // 이거 없으면 터치해야 그래프 나옴
-        mChart.setData(data);
-        //}
-
-        LimitLine eventline = new LimitLine(event, "EVENT");
-        eventline.setLineWidth(4f);
-        eventline.enableDashedLine(10f, 10f, 0f);
-        eventline.setLabelPosition(LimitLine.LimitLabelPosition.RIGHT_TOP);
-        eventline.setTextSize(10f);
-        YAxis leftAxis = mChart.getAxisLeft();
-//                            int max;
-        if((int)mChart.getYMax() > event)
-            max = (int)mChart.getYMax();
-        else
-            max = event;
-
-        if((int)mChart.getYMax() < 10 && max < 10){
-            max = 10;
-        }
-
-        leftAxis.setAxisMaximum((int)(max*1.2));    //                            leftAxis.removeAllLimitLines();
-        leftAxis.removeAllLimitLines();
-        leftAxis.addLimitLine(eventline);
+        };
+        timer.schedule(tt,100,2000);
     }
-
-
 
     private void setData() {
-
         db.collection("traffics").orderBy("time", Query.Direction.DESCENDING)
                 .whereGreaterThanOrEqualTo("time", start)
                 .whereLessThanOrEqualTo("time", end)
@@ -311,92 +173,87 @@ public class TrainingResult2ButtonActivity extends AppCompatActivity {
                                 String time = document.getString("time");
 
                                 arr.add(time.substring(14));
+
                                 trafficValue.add(new Entry(--arrSize, traffic));  // Entry 1 부터 순서대로 그래프에 출력되는거라서 반대로 입력
                                 commandValue.add(new Entry(arrSize, command));
+
                             }
                             if (type==0) {
                                 //values.clear();
-                                valuesOn.clear();
                                 values = trafficValue;
                             }
                             else {
                                 //values.clear();
-                                valuesOn.clear();
                                 values = commandValue;
                             }
                             Log.d(TAG, "values "+ values);
                             Collections.reverse(arr);
                             Collections.reverse(values);    // 1부터 즉, 순서대로 되도록 뒤집음, 안 그러면 에러남
 
-                            //int x = values.size();
-                            for(Integer index : index){
-                                Log.d(TAG,  "Index " + index.intValue());
-                                valuesOn.add(values.get(index.intValue()));
-                                values.set(index.intValue(), new Entry(index.intValue(),0));
-                            }
-                            Collections.reverse(valuesOn);
+                            mChart.getXAxis().setValueFormatter(new ChartXValueFormatter(arr)); // x축 내용 표시
 
-                            int flag = 1;
-                            for (int x = 0;x<values.size();x++){
-                                for (Integer index: index){
-                                    if (x== index){
-                                        flag = 0;
-                                        break;
-                                    }
+                            LineDataSet set1, set2;
+                            if (mChart.getData() != null &&
+                                    mChart.getData().getDataSetCount() > 0) {
+                                Log.d(TAG, "if");
+                                set1 = (LineDataSet) mChart.getData().getDataSetByIndex(0);
+                                set1.setValues(values);
+                                set1.setLabel(mac);
+
+                                Log.e("ff","firstttttttttttttttttt  "+arrSize);
+
+                                for(int num=0;num<task.getResult().size();num++){
+                                    if(index.contains(num))
+                                        colors.add(Color.RED);
+                                    else if(index2.contains(num))
+                                        colors.add(Color.BLUE);
+                                    else
+                                        colors.add(Color.BLACK);
+                                    Log.e("ff","enddddddddddddddd");
+
                                 }
-                                if (flag == 1){
-                                    valuesOn.add(x,new Entry(x,0));
-                                }
-                                flag = 1;
-                            }
+                                set1.setCircleColors(colors);
+//                                set1.setColors(colors);
 
-
-
-                            //Collections.reverse(values);
-                            Log.d(TAG, "on values "+ valuesOn);
-                            Log.d(TAG, "off values "+ values);
-
-
-
-                            mChart.getXAxis().setValueFormatter(new ChartXValueFormatter(arr));
-
-                            LineDataSet set1;
-                            LineDataSet set2;
-
+                                mChart.getData().notifyDataChanged();
+                                mChart.notifyDataSetChanged();
+                                mChart.invalidate();    // 이거 없으면 터치해야 그래프 나옴
+                            } else {
                                 Log.d(TAG, "else");
-                                set1 = new LineDataSet(values, "off");
+                                set1 = new LineDataSet(values, mac);
                                 set1.setDrawIcons(false);
-                                set1.enableDashedLine(10f, 5f, 0f); // 그래프 쌍곡선
+//                                set1.enableDashedLine(10f, 5f, 0f); // 그래프 쌍곡선
                                 set1.enableDashedHighlightLine(10f, 5f, 0f);    // 터치했을 때 나오는 주황색 라인 관련
-                                set1.setColor(Color.BLUE);   // 쌍곡선 색깔
-                                set1.setCircleColor(Color.BLUE);
-                                set1.setLineWidth(1f);
-                                set1.setCircleRadius(1f);
+                                set1.setColor(Color.DKGRAY);   // 쌍곡선 색깔
+
+                                set1.setCircleColor(Color.DKGRAY);
+                                set1.setLineWidth(3f);
+                                set1.setCircleRadius(5f);
                                 set1.setDrawCircleHole(false);
                                 set1.setValueTextSize(9f);
-                                set1.setDrawFilled(false);
+                                set1.setDrawFilled(true);
+
+
+//                                set1.setFormLineWidth(1f);
+//                                set1.setFormLineDashEffect(new DashPathEffect(new float[]{10f, 5f}, 0f));
+//                                set1.setFormSize(15.f);
+//                                set1.setLabel(nick);
+//                                set1.setHighLightColor(Color.BLUE);
                                 set1.setHighlightEnabled(true);
 
-                                set2 = new LineDataSet(valuesOn, "on");
-                                set2.setDrawIcons(false);
-                                set2.enableDashedLine(10f, 5f, 0f); // 그래프 쌍곡선
-                                set2.enableDashedHighlightLine(10f, 5f, 0f);    // 터치했을 때 나오는 주황색 라인 관련
-                                set2.setColor(Color.RED);   // 쌍곡선 색깔
-                                set2.setCircleColor(Color.RED);
-                                set2.setLineWidth(1f);
-                                set2.setCircleRadius(1f);
-                                set2.setDrawCircleHole(false);
-                                set2.setValueTextSize(9f);
-                                set2.setDrawFilled(false);
-                                set2.setHighlightEnabled(true);
-
+                                if (Utils.getSDKInt() >= 18) {
+                                    Drawable drawable = ContextCompat.getDrawable(TrainingResultActivity.this, R.drawable.fade_blue);
+                                    set1.setFillDrawable(drawable);
+                                } else {
+                                    set1.setFillColor(Color.DKGRAY);
+                                }
                                 ArrayList<ILineDataSet> dataSets = new ArrayList<>();
                                 dataSets.add(set1);
-                                dataSets.add(set2);
+
                                 LineData data = new LineData(dataSets);
                                 mChart.invalidate();    // 이거 없으면 터치해야 그래프 나옴
                                 mChart.setData(data);
-
+                            }
 
                             LimitLine eventline = new LimitLine(event, "EVENT");
                             eventline.setLineWidth(4f);
@@ -446,8 +303,9 @@ public class TrainingResult2ButtonActivity extends AppCompatActivity {
 
                     }
                 });
-        Intent intent = new Intent(TrainingResult2ButtonActivity.this,MenuActivity.class);
+        Intent intent = new Intent(TrainingResultActivity.this,MenuActivity.class);
         startActivity(intent);
+
     }
 
     RadioButton.OnClickListener type0ClickListener = new RadioButton.OnClickListener() {
@@ -456,10 +314,10 @@ public class TrainingResult2ButtonActivity extends AppCompatActivity {
             type = 0;
             event = eventT;
             Log.d(TAG, "type "+ type+ "event " + event);
-            setData2();
+            setData();
+            setData();
         }
     };
-
 
     RadioButton.OnClickListener type1ClickListener = new RadioButton.OnClickListener() {
         @Override
@@ -467,8 +325,8 @@ public class TrainingResult2ButtonActivity extends AppCompatActivity {
             type = 1;
             event = eventC;
             Log.d(TAG, "type "+ type+ "event " + event);
-            setData2();
+            setData();
+            setData();
         }
     };
-
 }

@@ -112,7 +112,7 @@ public class MenuActivity extends AppCompatActivity {
         b5.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(MenuActivity.this,SettingActivity.class);
+                Intent intent = new Intent(MenuActivity.this,SettingTimeListActivity.class);
                 intent.putExtra("title",b2.getText().toString());
                 startActivity(intent);
                 //startActivityForResult(intent,Request_Code2);

@@ -31,7 +31,6 @@ import java.util.List;
 import java.util.Locale;
 
 import static android.graphics.Color.LTGRAY;
-import static java.lang.Thread.sleep;
 
 
 public class Training2ButtonActivity extends AppCompatActivity {
@@ -56,7 +55,7 @@ public class Training2ButtonActivity extends AppCompatActivity {
     ArrayList<Integer> onTrafficGraph = new ArrayList<>();
     ArrayList<Integer> offTrafficGraph = new ArrayList<>();
     ArrayList<Integer> allTraffic = new ArrayList<>();
-    ArrayList<Integer> noTrafficGraph = new ArrayList<>();
+    //ArrayList<Integer> noTrafficGraph = new ArrayList<>();
 
     //command
     ArrayList<Integer> onCommand = new ArrayList<>();
@@ -64,7 +63,7 @@ public class Training2ButtonActivity extends AppCompatActivity {
     ArrayList<Integer> onCommandGraph = new ArrayList<>();
     ArrayList<Integer> offCommandGraph = new ArrayList<>();
     ArrayList<Integer> allCommand = new ArrayList<>();
-    ArrayList<Integer> noCommandGraph = new ArrayList<>();
+    //ArrayList<Integer> noCommandGraph = new ArrayList<>();
 
     ArrayList<String> arr = new ArrayList();
 
@@ -97,6 +96,7 @@ public class Training2ButtonActivity extends AppCompatActivity {
         offButton = findViewById(R.id.offButtonT);
         finishButton = findViewById(R.id.finishButton);
 
+
         Intent intent = getIntent();
 
         mac = intent.getExtras().getString("mac");
@@ -109,8 +109,11 @@ public class Training2ButtonActivity extends AppCompatActivity {
 
     private void check(final String mac) {
         Log.d(TAG, "MAC : "+mac);
-        final int onsize = onStartTime.size();
-        int offsize = offStartTime.size();
+        Date date = onStartTime.get(0).getTime();
+        start = dateFormat.format(date);
+        Date date22 = offEndTime.get(2).getTime();
+        end = dateFormat.format(date22);
+        Log.e("sssssssssssssss",start+" "+end);
 
         db.collection("traffics")
                 //        .whereEqualTo("nickname", selectedNickname)
@@ -124,6 +127,7 @@ public class Training2ButtonActivity extends AppCompatActivity {
                         if (task.isSuccessful()) {
                             size = task.getResult().size()-1;
                             for (QueryDocumentSnapshot document : task.getResult()) {
+                                Log.e("here","111111111111111111111111111");
                                 try {
                                     List ls = (List)document.getData().get(mac);
                                     int traffic = Integer.parseInt(ls.get(0).toString());
@@ -155,6 +159,13 @@ public class Training2ButtonActivity extends AppCompatActivity {
                                     Log.d(TAG, String.valueOf(cal.after(onTime.get(2)) && cal.before(offTime.get(2))));
                                      */
 
+                                    Log.e("first","start: "+onStartTime.get(0)+", end: "+onEndTime.get(0));
+                                    Log.e("second","start: "+onStartTime.get(1)+", end: "+onEndTime.get(1));
+                                    Log.e("third","start: "+onStartTime.get(2)+", end: "+onEndTime.get(2));
+                                    Log.e("first","start: "+offStartTime.get(0)+", end: "+offEndTime.get(0));
+                                    Log.e("second","start: "+offStartTime.get(1)+", end: "+offEndTime.get(1));
+                                    Log.e("third","start: "+offStartTime.get(2)+", end: "+offEndTime.get(2));
+
                                     if((cal.after(onStartTime.get(0)) && cal.before(onEndTime.get(0)))|| (cal.after(onStartTime.get(1)) && cal.before(onEndTime.get(1))) || (cal.after(onStartTime.get(2)) && cal.before(onEndTime.get(2)))){
                                         //작동할 때의 traffic
                                         onTraffic.add(traffic);
@@ -166,8 +177,8 @@ public class Training2ButtonActivity extends AppCompatActivity {
 
                                         offTrafficGraph.add(0);
                                         offCommandGraph.add(0);
-                                        noTrafficGraph.add(0);
-                                        noCommandGraph.add(0);
+                                        //noTrafficGraph.add(0);
+                                        //noCommandGraph.add(0);
 
                                         //index.add(arrSize);
                                     }else if ((cal.after(offStartTime.get(0)) && cal.before(offEndTime.get(0)))|| (cal.after(offStartTime.get(1)) && cal.before(offEndTime.get(1))) || (cal.after(offStartTime.get(2)) && cal.before(offEndTime.get(2)))){
@@ -180,11 +191,11 @@ public class Training2ButtonActivity extends AppCompatActivity {
 
                                         onTrafficGraph.add(0);
                                         onCommandGraph.add(0);
-                                        noTrafficGraph.add(0);
-                                        noCommandGraph.add(0);
+                                        //noTrafficGraph.add(0);
+                                        //noCommandGraph.add(0);
                                     }else{
-                                        noTrafficGraph.add(0);
-                                        noCommandGraph.add(0);
+                                        //noTrafficGraph.add(0);
+                                        //noCommandGraph.add(0);
 
                                         onTrafficGraph.add(0);
                                         onCommandGraph.add(0);
@@ -198,6 +209,7 @@ public class Training2ButtonActivity extends AppCompatActivity {
                                     //time
                                 }catch (NullPointerException e){
                                     Log.e("err",e.getMessage());
+                                    size--;
                                 }
                             }
                         } else {
@@ -271,7 +283,7 @@ public class Training2ButtonActivity extends AppCompatActivity {
                         double offAverageCommand = offSumCommand / offCommand.size();
 
                         eventTraffic = (int) ((onAverageTraffic + offAverageTraffic) / 2);
-                        eventCommand = (int) ((onAverageCommand + offAverageCommand) / 2);
+                        eventCommand = ((onCommand.get(0).intValue() + offCommand.get(0).intValue()) / 2);
 
                         Log.d(TAG,"eventTraffic : " + eventTraffic + "  eventCommand" + eventCommand);
                         //average
@@ -323,10 +335,10 @@ public class Training2ButtonActivity extends AppCompatActivity {
                                                         //intent.putExtra("index", index);
                                                         intent.putExtra("onTrafficGraph", onTrafficGraph);
                                                         intent.putExtra("offTrafficGraph", offTrafficGraph);
-                                                        intent.putExtra("noTrafficGraph", noTrafficGraph);
+                                                        //intent.putExtra("noTrafficGraph", noTrafficGraph);
                                                         intent.putExtra("onCommandGraph", onCommandGraph);
                                                         intent.putExtra("offCommandGraph", offCommandGraph);
-                                                        intent.putExtra("noCommandGraph", noCommandGraph);
+                                                        //intent.putExtra("noCommandGraph", noCommandGraph);
                                                         intent.putExtra("arr", arr);
                                                         intent.putExtra("size", size);
 
@@ -346,75 +358,84 @@ public class Training2ButtonActivity extends AppCompatActivity {
 
     public void onTraining(View view) {
         String text = String.valueOf(onButton.getText());
-        Calendar now = Calendar.getInstance();
-        now.add(Calendar.HOUR_OF_DAY,9);
+        Calendar nowow = Calendar.getInstance();
 
+        Log.e("aaaaaaaa",dateFormat.format(nowow.getTime())+"");
         if (text.equals("작동 시작")){
-            if (onTimes==0) {
-                Date date = now.getTime();
-                start = dateFormat.format(date);
-                Log.d(TAG, "start" + start);
-            }
+            Calendar now = Calendar.getInstance();
+//            now.add(Calendar.HOUR_OF_DAY,9);
             onStartTime.add(now);
             onButton.setText("작동 끝");
             onButton.setBackgroundColor(Color.DKGRAY);
+            //onButton.setSelected(true);
             offButton.setEnabled(false);
-            finishButton.setEnabled(false);
+//            finishButton.setEnabled(false);
         }else if (text.equals("작동 끝")){
-            onButton.setText("작동 시작");
-            onButton.setBackgroundColor(LTGRAY);
-            onButton.setEnabled(false);
-
             try {
-                sleep(5000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+                Thread.sleep(5000);
+            }catch (Exception e){
             }
-            now = Calendar.getInstance();
-            now.add(Calendar.HOUR_OF_DAY,9);
+            Calendar now = Calendar.getInstance();
+//            now.add(Calendar.HOUR_OF_DAY,9);
             onEndTime.add(now);
 
 
+            try {
+                Thread.sleep(5000);
+            }catch (Exception e){
+            }
+
+
+            onButton.setText("작동 시작");
+            onButton.setBackgroundColor(LTGRAY);
+            //onButton.setSelected(false);
             if (offTimes<3)
                 offButton.setEnabled(true);
-            finishButton.setEnabled(true);
+            onButton.setEnabled(false);
+//            finishButton.setEnabled(true);
             onTimes++;
         }
     }
 
     public void offTraining(View view) {
         String text = String.valueOf(offButton.getText());
-        Calendar now = Calendar.getInstance();
-        now.add(Calendar.HOUR_OF_DAY,9);
+
 
         if (text.equals("미작동 시작")){
+            Calendar now = Calendar.getInstance();
+//            now.add(Calendar.HOUR_OF_DAY,9);
             offStartTime.add(now);
             offButton.setText("미작동 끝");
             offButton.setBackgroundColor(Color.DKGRAY);
+            //offButton.setSelected(true);
             onButton.setEnabled(false);
-            finishButton.setEnabled(false);
+//            finishButton.setEnabled(false);
         }else if (text.equals("미작동 끝")){
-            offButton.setText("미작동 시작");
-            offButton.setBackgroundColor(LTGRAY);
-            offButton.setEnabled(false);
+            try {
+                Thread.sleep(5000);
+            }catch (Exception e){
+            }
+            Calendar now = Calendar.getInstance();
+//            now.add(Calendar.HOUR_OF_DAY,9);
+            offEndTime.add(now);
+
 
             try {
-                sleep(5000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+                Thread.sleep(5000);
+            }catch (Exception e){
             }
-            now = Calendar.getInstance();
-            now.add(Calendar.HOUR_OF_DAY,9);
-            offEndTime.add(now);
+
+
+            offButton.setText("미작동 시작");
+            offButton.setBackgroundColor(LTGRAY);
+            //offButton.setSelected(false);
 
             if (onTimes<3)
                 onButton.setEnabled(true);
-            if (offTimes==2) {
-                Date date = now.getTime();
-                end = dateFormat.format(date);
-                Log.d(TAG, "end" + end);
-            }
-            finishButton.setEnabled(true);
+            else
+                finishButton.setEnabled(true);
+
+            offButton.setEnabled(false);
             offTimes++;
         }
     }
@@ -428,13 +449,7 @@ public class Training2ButtonActivity extends AppCompatActivity {
             onButton.setVisibility(view.GONE);
             offButton.setVisibility(view.GONE);
             finishButton.setVisibility(view.GONE);
-/*
-            Calendar cal = Calendar.getInstance();
-            cal.add(Calendar.HOUR_OF_DAY,9);
-            Date date = cal.getTime();
-            end = dateFormat.format(date);
-            Log.d(TAG, "end" + end);
-*/
+
             check(mac);
         }
     }

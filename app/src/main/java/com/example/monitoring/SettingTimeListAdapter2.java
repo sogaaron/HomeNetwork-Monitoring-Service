@@ -9,13 +9,7 @@ import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.TextView;
 
-import androidx.annotation.NonNull;
-
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.QueryDocumentSnapshot;
-import com.google.firebase.firestore.QuerySnapshot;
 
 import java.util.ArrayList;
 
@@ -24,14 +18,13 @@ public class SettingTimeListAdapter2 extends BaseAdapter {
 
     Context context = null;
     LayoutInflater layoutInflater = null;
-    private ArrayList<SettingTimeListViewItem> listViewItemList = new ArrayList<SettingTimeListViewItem>();
+    private ArrayList<SettingTimeListViewItem> listViewItemList = null;
     private String TAG = "SettingTimeListAdapter2";
     String pposition;
 
-    public SettingTimeListAdapter2() {
-
+    public SettingTimeListAdapter2(ArrayList<SettingTimeListViewItem> _oData) {
+        listViewItemList = _oData;
     }
-
 
     @Override
     public int getCount() {
@@ -49,8 +42,27 @@ public class SettingTimeListAdapter2 extends BaseAdapter {
     }
 
     @Override
-    public View getView(final int position, View convertView, ViewGroup parent) {
+    public View getView(int position, View convertView, ViewGroup parent) {
 
+        final Context context = parent.getContext();
+        if (convertView == null) {
+            LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+            // Data Set(listViewItemList)에서 position에 위치한 데이터 참조 획득
+            final SettingTimeListViewItem listViewItem = listViewItemList.get(position);
+            //final Context context = parent.getContext();
+            convertView = inflater.inflate(R.layout.listview_setting_time2, parent, false);
+
+            TextView textView = convertView.findViewById(R.id.textViewTime2);
+            textView.setText(listViewItem.getTime());
+
+            Button deleteButton = (Button) convertView.findViewById(R.id.buttonDeleteMode);
+            deleteButton.setOnClickListener(listViewItemList.get(position).onClickListener);
+
+            convertView.setTag(position);
+            Log.d(TAG, position + "???");
+
+
+        /*
         final Context context = parent.getContext();
         if (convertView == null) {
             LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
@@ -75,10 +87,9 @@ public class SettingTimeListAdapter2 extends BaseAdapter {
                     String text=null;
                     TextView tv = oParentView.findViewById(R.id.textViewTime2);
                     text = (String) tv.getText();
-                    Log.d(TAG, "Clicked!!!!!!!!!11"+text);
+                    Log.d(TAG, "Clicked!!!!!!!!!11"+text + position);
 
-                    //listViewItemList.remove(position);
-
+                    listViewItemList.remove(position);
 
                     db.collection("notificationTime")
                             .whereEqualTo("timetext", text)
@@ -94,7 +105,6 @@ public class SettingTimeListAdapter2 extends BaseAdapter {
                                     } else {
                                         Log.d(TAG, "Error getting documents: ", task.getException());
                                     }
-                                    notifyDataSetChanged();
 
                                 }
                                                                     //oAdapter.notifyDataSetChanged();
@@ -103,17 +113,28 @@ public class SettingTimeListAdapter2 extends BaseAdapter {
             });
         }
 
+         */
+        }
+
+
         return convertView;
+
+
+
     }
 
-
+/*
     public void addItem(String time, boolean flag) {
         SettingTimeListViewItem item= new SettingTimeListViewItem() ;
 
         item.setTime(time);
         item.setFlag(flag);
+        //item.onClickListener = applicationContext;
+
         Log.e("qqqqqqqqqq",item.getTime() +"  "+ item.getFlag());
         listViewItemList.add(item);
     }
+
+ */
 
 }

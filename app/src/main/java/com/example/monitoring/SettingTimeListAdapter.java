@@ -24,11 +24,11 @@ public class SettingTimeListAdapter extends BaseAdapter {
 
     Context context = null;
     LayoutInflater layoutInflater = null;
-    private ArrayList<SettingTimeListViewItem> listViewItemList = new ArrayList<SettingTimeListViewItem>();
+    private ArrayList<SettingTimeListViewItem> listViewItemList = null;
     private String TAG = "SettingTimeListAdapter";
 
-    public SettingTimeListAdapter() {
-
+    public SettingTimeListAdapter(ArrayList<SettingTimeListViewItem> _oData) {
+        listViewItemList = _oData;
     }
 
 
@@ -113,7 +113,7 @@ public class SettingTimeListAdapter extends BaseAdapter {
         return convertView;
     }
 
-
+/*
     public void addItem(String time, boolean flag) {
         SettingTimeListViewItem item= new SettingTimeListViewItem() ;
 
@@ -122,4 +122,6 @@ public class SettingTimeListAdapter extends BaseAdapter {
         Log.e(TAG,item.getTime() +"  "+ item.getFlag());
         listViewItemList.add(item);
     }
+
+ */
 }

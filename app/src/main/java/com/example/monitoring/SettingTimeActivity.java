@@ -65,8 +65,8 @@ public class SettingTimeActivity extends AppCompatActivity {
         if(calStart.get(Calendar.HOUR_OF_DAY)>calEnd.get(Calendar.HOUR_OF_DAY))
             calEnd.add(Calendar.DATE,1);
 
-        calStart.add(Calendar.HOUR_OF_DAY,-9);
-        calEnd.add(Calendar.HOUR_OF_DAY,-9);//파이어스토어에서 우리가 확인할 때 시간 맞추기 위해
+//        calStart.add(Calendar.HOUR_OF_DAY,-9);
+//        calEnd.add(Calendar.HOUR_OF_DAY,-9);//파이어스토어에서 우리가 확인할 때 시간 맞추기 위해
 
 
 

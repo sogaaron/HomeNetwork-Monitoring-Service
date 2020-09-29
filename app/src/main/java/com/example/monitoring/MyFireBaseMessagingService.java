@@ -83,180 +83,13 @@ public class MyFireBaseMessagingService extends FirebaseMessagingService {
         Log.i(TAG, "알림 메시지" + remoteMessage2);
 
         remoteMessage = remoteMessage2;
-        if(remoteMessage.getData().get("title")=="NEW!"){
-            sendNotification(remoteMessage.getData().get("body"));
-            return;
+        if(remoteMessage.getData().get("title").equals("NEW!")){
+            sendNotificationNewDevice(remoteMessage.getData().get("body"));
         }
         //String now = dateFormat.format (System.currentTimeMillis());
-
-        db.collection("notificationTime")//.orderBy("time", Query.Direction.DESCENDING)
-                .get()
-                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-
-                    @Override
-                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                        if (task.isSuccessful()) {
-                            for (QueryDocumentSnapshot document : task.getResult()) {
-                                //String start = document.getString("start");
-                                Timestamp timestampStart = document.getTimestamp("start");
-                                Timestamp timestampEnd = document.getTimestamp("end");
-                                boolean flag = document.getBoolean("flag");
-                                if (flag == true){ //alarm x
-                                    //시간변환
-                                    Date date1 = timestampStart.toDate();
-                                    Date date2 = timestampEnd.toDate();
-
-                                    Calendar cal1 = Calendar.getInstance();
-                                    Calendar cal2 = Calendar.getInstance();
-                                    Calendar now = Calendar.getInstance();
-
-
-                                    cal1.setTime(date1);
-                                    cal2.setTime(date2);
-                                    cal1.add(Calendar.HOUR_OF_DAY,9);
-                                    cal2.add(Calendar.HOUR_OF_DAY,9);
-
-                                    now.add(Calendar.HOUR_OF_DAY,9);
-                                    Log.d(TAG,"now : "+ now.getTime());
-
-
-                                    cal1.set(Calendar.YEAR,now.get(Calendar.YEAR));
-                                    cal1.set(Calendar.MONTH,now.get(Calendar.MONTH));
-                                    cal1.set(Calendar.DATE,now.get(Calendar.DATE));
-
-                                    cal2.set(Calendar.YEAR,now.get(Calendar.YEAR));
-                                    cal2.set(Calendar.MONTH,now.get(Calendar.MONTH));
-                                    cal2.set(Calendar.DATE,now.get(Calendar.DATE));
-                                    if(cal1.get(Calendar.HOUR_OF_DAY)>cal2.get(Calendar.HOUR_OF_DAY))
-                                        cal1.add(Calendar.DATE,-1);
-
-
-                                    String start = dateFormat.format(cal1.getTime());
-                                    String end = dateFormat.format(cal2.getTime());
-                                    Log.d(TAG,"start : "+ start + "  end : " + end);
-
-                                    if (cal1.before(cal2)){
-                                        if (cal1.before(now) && cal2.after(now)){
-                                            onOff=true; //alarm x
-                                            Log.d(TAG,"start<end true alarm x");
-                                        }
-                                        else {
-                                            onOff = false; //alarm o
-                                            Log.d(TAG,"start<end false alarm o");
-                                        }
-                                    }else if(cal1.after(cal2)){
-                                        if (cal1.after(now) && cal2.after(now)){
-                                            onOff = true; //alarm x
-                                            Log.d(TAG,"start<end true alarm x");
-                                        }
-                                        else {
-                                            onOff = false; //alarm o
-                                            Log.d(TAG,"start<end false alarm o");
-                                        }
-                                    }
-
-                                }
-                                Log.d(TAG, document.getId() + " => " + document.getData());
-                            }
-                        } else {
-                            Log.d(TAG, "Error getting documents: ", task.getException());
-                        }
-
-                        if(remoteMessage.getData() != null){
-                            //Log.d("FCM Log", "알림 메시지: " + remoteMessage.getNotification().getBody());
-                            long messageTime = remoteMessage.getSentTime();
-                            Date messageTime2 = new Date(messageTime);
-                            String messageNickname = remoteMessage.getData().get("nickname");
-                            String messageDevice = remoteMessage.getData().get("device");
-                            String messageBody = remoteMessage.getData().get("body");//remoteMessage.getNotification().getBody();
-                            String messageTitle = remoteMessage.getData().get("title"); //remoteMessage.getNotification().getTitle();
-
-                            Log.d(TAG, "알림 메시지"+ messageTitle + "  " + messageBody);
-
-                            Intent intent = new Intent(getApplicationContext(), MenuActivity.class);
-                            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                            PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, PendingIntent.FLAG_ONE_SHOT);
-                            String channelIdHIGH = "Channel ID";
-                            String channelIdDEFAULT = "Channel ID2";
-
-                            Uri defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
-
-                            NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(getApplicationContext(), channelIdHIGH)
-                                    .setSmallIcon(R.drawable.ic_stat_ic_notification)
-                                    .setContentTitle(messageTitle)
-                                    .setContentText(messageBody)
-                                    .setAutoCancel(true)
-                                    .setSound(defaultSoundUri)
-                                    .setContentIntent(pendingIntent);
-                            NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-
-                            NotificationCompat.Builder notificationBuilder2 = new NotificationCompat.Builder(getApplicationContext(), channelIdDEFAULT)
-                                    .setSmallIcon(R.drawable.ic_stat_ic_notification)
-                                    .setContentTitle(messageTitle)
-                                    .setContentText(messageBody)
-                                    .setAutoCancel(true)
-                                    .setSound(defaultSoundUri)
-                                    .setContentIntent(pendingIntent);
-                            NotificationManager notificationManager2 = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                                // Create the NotificationChannel
-                                //String channelName = "Channel Name";
-                                NotificationChannel channel;
-                                if (onOff==false){
-                                    channel = new NotificationChannel(channelIdHIGH, "HIGH", NotificationManager.IMPORTANCE_HIGH);
-                                    Log.d(TAG, "HIGH" + onOff);
-                                    notificationManager.createNotificationChannel(channel);
-                                }else {
-                                    channel = new NotificationChannel(channelIdDEFAULT, "DEFAULT", NotificationManager.IMPORTANCE_LOW);
-                                    Log.d(TAG, "DEFAULT"+onOff);
-                                    notificationManager2.createNotificationChannel(channel);
-                                }
-                            }
-
-                            if (onOff==false){
-                                PowerManager powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
-                                PowerManager.WakeLock wakeLock = powerManager.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP, "My:Tag");
-                                wakeLock.acquire(5000);
-
-                                notificationManager.notify(0, notificationBuilder.build());
-                            }else{
-                                notificationManager2.notify(0, notificationBuilder2.build());
-
-                            }
-
-                            onOff = false;
-
-                            // Add a new document with a generated id.
-                            Map<String, Object> data = new HashMap<>();
-                            data.put("nickname", messageNickname);
-                            data.put("device", messageDevice);
-                            data.put("text", messageBody);
-                            data.put("time", new Timestamp(messageTime2));
-
-                            db.collection("log")
-                                    .add(data)
-                                    .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
-                                        @Override
-                                        public void onSuccess(DocumentReference documentReference) {
-                                            Log.d(TAG, "DocumentSnapshot written with ID: " + documentReference.getId());
-                                        }
-                                    })
-                                    .addOnFailureListener(new OnFailureListener() {
-                                        @Override
-                                        public void onFailure(@NonNull Exception e) {
-                                            Log.w(TAG, "Error adding document", e);
-                                        }
-                                    });
-
-                        }
-
-                    }
-                });
-
-
-// notificationBuilder 두개 만든거 맞는가?
-
+        else {
+            sendNotificationDangerAlert();
+        }
     }
 
 
@@ -320,13 +153,14 @@ public class MyFireBaseMessagingService extends FirebaseMessagingService {
      *
      * @param messageBody FCM message body received.
      */
-    private void sendNotification(String messageBody) {
-        Log.i(TAG, "알림 메시지"+ messageBody);
+    private void sendNotificationNewDevice(String messageBody) {
+        Log.i(TAG, "new 알림 메시지"+ messageBody);
 
 
-        Intent intent = new Intent(this, MenuActivity.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0 /* Request code */, intent,
+        Intent intentR = new Intent(this, RegisterActivity.class);
+        intentR.putExtra("newDevice",messageBody);
+        intentR.addFlags(intentR.FLAG_ACTIVITY_CLEAR_TOP);
+        PendingIntent pendingIntentR = PendingIntent.getActivity(this, 0 /* Request code */, intentR,
                 PendingIntent.FLAG_ONE_SHOT);
 
 
@@ -341,7 +175,7 @@ public class MyFireBaseMessagingService extends FirebaseMessagingService {
                         .setContentText(messageBody)
                         .setAutoCancel(true)
                         .setSound(defaultSoundUri)
-                        .setContentIntent(pendingIntent);
+                        .setContentIntent(pendingIntentR);
 
         NotificationManager notificationManager =
                 (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
@@ -357,6 +191,179 @@ public class MyFireBaseMessagingService extends FirebaseMessagingService {
         notificationManager.notify(0 /* ID of notification */, notificationBuilder.build());
     }
 
+    Uri defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+
+    private void sendNotificationDangerAlert() {
+
+        db.collection("notificationTime")//.orderBy("time", Query.Direction.DESCENDING)
+                .get()
+                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+
+                    @Override
+                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                        if (task.isSuccessful()) {
+                            for (QueryDocumentSnapshot document : task.getResult()) {
+                                //String start = document.getString("start");
+                                Timestamp timestampStart = document.getTimestamp("start");
+                                Timestamp timestampEnd = document.getTimestamp("end");
+                                boolean flag = document.getBoolean("flag");
+                                if (flag == true) { //alarm x
+
+                                    defaultSoundUri = null;
+                                    //시간변환
+                                    Date date1 = timestampStart.toDate();
+                                    Date date2 = timestampEnd.toDate();
+
+                                    Calendar cal1 = Calendar.getInstance();
+                                    Calendar cal2 = Calendar.getInstance();
+                                    Calendar now = Calendar.getInstance();
+
+
+                                    cal1.setTime(date1);
+                                    cal2.setTime(date2);
+//                                    cal1.add(Calendar.HOUR_OF_DAY, 9);
+//                                    cal2.add(Calendar.HOUR_OF_DAY, 9);
+//
+//                                    now.add(Calendar.HOUR_OF_DAY, 9);
+                                    Log.d(TAG, "now : " + now.getTime());
+
+
+                                    cal1.set(Calendar.YEAR, now.get(Calendar.YEAR));
+                                    cal1.set(Calendar.MONTH, now.get(Calendar.MONTH));
+                                    cal1.set(Calendar.DATE, now.get(Calendar.DATE));
+
+                                    cal2.set(Calendar.YEAR, now.get(Calendar.YEAR));
+                                    cal2.set(Calendar.MONTH, now.get(Calendar.MONTH));
+                                    cal2.set(Calendar.DATE, now.get(Calendar.DATE));
+                                    if (cal1.get(Calendar.HOUR_OF_DAY) > cal2.get(Calendar.HOUR_OF_DAY))
+                                        cal1.add(Calendar.DATE, -1);
+
+
+                                    String start = dateFormat.format(cal1.getTime());
+                                    String end = dateFormat.format(cal2.getTime());
+                                    Log.d(TAG, "start : " + start + "  end : " + end);
+
+                                    if (cal1.before(cal2)) {
+                                        if (cal1.before(now) && cal2.after(now)) {
+                                            onOff = true; //alarm x
+                                            Log.d(TAG, "start<end true alarm x");
+                                        } else {
+                                            onOff = false; //alarm o
+                                            Log.d(TAG, "start<end false alarm o");
+                                        }
+                                    } else if (cal1.after(cal2)) {
+                                        if (cal1.after(now) && cal2.after(now)) {
+                                            onOff = true; //alarm x
+                                            Log.d(TAG, "start<end true alarm x");
+                                        } else {
+                                            onOff = false; //alarm o
+                                            Log.d(TAG, "start<end false alarm o");
+                                        }
+                                    }
+                                    if (onOff==true) break;
+
+                                }
+                                Log.d(TAG, document.getId() + " => " + document.getData());
+                            }
+                        } else {
+                            Log.d(TAG, "Error getting documents: ", task.getException());
+                        }
+                        Log.d(TAG, "alarm " + onOff);
+                        if (remoteMessage.getData() != null) {
+                            //Log.d("FCM Log", "알림 메시지: " + remoteMessage.getNotification().getBody());
+                            long messageTime = remoteMessage.getSentTime();
+                            Date messageTime2 = new Date(messageTime);
+                            String messageNickname = remoteMessage.getData().get("nickname");
+                            String messageDevice = remoteMessage.getData().get("device");
+                            String messageBody = remoteMessage.getData().get("body");//remoteMessage.getNotification().getBody();
+                            String messageTitle = remoteMessage.getData().get("title"); //remoteMessage.getNotification().getTitle();
+                            int messageTraiffc = Integer.parseInt(remoteMessage.getData().get("traffic"));
+                            Log.d(TAG, "알림 메시지" + messageTitle + "  " + messageBody + "트래픽" + messageTraiffc);
+
+                            Intent intent = new Intent(getApplicationContext(), CheckAccessActivity.class);
+                            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                            intent.putExtra("nickname",messageNickname);
+                            intent.putExtra("device",messageDevice);
+                            intent.putExtra("traffic", messageTraiffc);
+                            PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, PendingIntent.FLAG_ONE_SHOT);
+
+                            String channelIdHIGH = "Channel ID";
+                            String channelIdDEFAULT = "Channel ID2";
+
+
+                            NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(getApplicationContext(), channelIdHIGH)
+                                    .setSmallIcon(R.drawable.ic_stat_ic_notification)
+                                    .setContentTitle(messageTitle)
+                                    .setContentText(messageBody)
+                                    .setAutoCancel(true)
+                                    .setSound(defaultSoundUri)
+                                    .setContentIntent(pendingIntent);
+                            NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+                            NotificationCompat.Builder notificationBuilder2 = new NotificationCompat.Builder(getApplicationContext(), channelIdDEFAULT)
+                                    .setSmallIcon(R.drawable.ic_stat_ic_notification)
+                                    .setContentTitle(messageTitle)
+                                    .setContentText(messageBody)
+                                    .setAutoCancel(true)
+                                    .setSound(defaultSoundUri)
+                                    .setContentIntent(pendingIntent);
+                            NotificationManager notificationManager2 = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                // Create the NotificationChannel
+                                //String channelName = "Channel Name";
+                                NotificationChannel channel;
+                                if (onOff == false) {
+                                    channel = new NotificationChannel(channelIdHIGH, "HIGH", NotificationManager.IMPORTANCE_HIGH);
+                                    Log.d(TAG, "HIGH" + onOff);
+                                    notificationManager.createNotificationChannel(channel);
+                                } else {
+                                    channel = new NotificationChannel(channelIdDEFAULT, "DEFAULT", NotificationManager.IMPORTANCE_LOW);
+                                    Log.d(TAG, "DEFAULT" + onOff);
+                                    notificationManager2.createNotificationChannel(channel);
+                                }
+                            }
+
+                            if (onOff == false) {
+                                PowerManager powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
+                                PowerManager.WakeLock wakeLock = powerManager.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP, "My:Tag");
+                                wakeLock.acquire(5000);
+
+                                notificationManager.notify(0, notificationBuilder.build());
+                            } else {
+                                notificationManager2.notify(0, notificationBuilder2.build());
+
+                            }
+
+                            onOff = false;
+
+                            // Add a new document with a generated id.
+                            Map<String, Object> data = new HashMap<>();
+                            data.put("nickname", messageNickname);
+                            data.put("device", messageDevice);
+                            data.put("text", messageBody);
+                            data.put("time", new Timestamp(messageTime2));
+
+                            db.collection("log")
+                                    .add(data)
+                                    .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+                                        @Override
+                                        public void onSuccess(DocumentReference documentReference) {
+                                            Log.d(TAG, "DocumentSnapshot written with ID: " + documentReference.getId());
+                                        }
+                                    })
+                                    .addOnFailureListener(new OnFailureListener() {
+                                        @Override
+                                        public void onFailure(@NonNull Exception e) {
+                                            Log.w(TAG, "Error adding document", e);
+                                        }
+                                    });
+
+                        }
+
+                    }
+                });
+    }
 
 
 

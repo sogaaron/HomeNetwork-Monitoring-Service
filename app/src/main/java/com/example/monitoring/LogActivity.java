@@ -112,6 +112,7 @@ public class LogActivity extends AppCompatActivity {
     private void allLogs() {
         adapter.deleteItem();
         db.collection("log").orderBy("time",Query.Direction.DESCENDING)
+                .limit(50)
                 .get()
                 .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
 
