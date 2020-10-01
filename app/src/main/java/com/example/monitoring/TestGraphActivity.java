@@ -796,8 +796,6 @@ public class TestGraphActivity extends AppCompatActivity implements View.OnTouch
                             event = Integer.parseInt(eventinput);
                             Toast.makeText(getApplicationContext(),String.valueOf(event),Toast.LENGTH_SHORT).show();
 
-
-
                             //event = Integer.parseInt(eventinput);
 
                             eventList.set(index, event);
