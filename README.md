@@ -22,7 +22,7 @@ Capstone project
                       
                       - 모바일 UI : 안드로이드 애플리케이션과 파이어베이스의 연동, 안드로이드 애플리케이션에서 트래픽 수치 그래프화 및 FCM 수신 기능 구현
 
-<img src="https://user-images.githubusercontent.com/23310187/34244435-91eab306-e668-11e7-8063-735dff683bf8.png" width="90%"></img>
+<img src="https://github.com/sogaaron/HomeNetwork-Monitoring-Service/issues/1#issue-729326472" width="90%"></img>
 
 ** Packet Monitoring 폴더 : 라즈베리파이 내 코드
    이 외 : 안드로이드 애플리케이션 코드
